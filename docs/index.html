@@ -1,0 +1,2320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smart Schedule Synth v2 — NYUAD Schedule Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg:#0d0e14;
+    --bg-2:#11131b;
+    --panel:#161824;
+    --panel-2:#1c1f2d;
+    --panel-3:#232636;
+    --line:#2a2f42;
+    --line-soft:#232840;
+    --ink:#ecedf3;
+    --ink-dim:#9098ad;
+    --ink-faint:#626a83;
+    --accent:#a78bfa;
+    --accent-2:#c4b5fd;
+    --accent-deep:#7c3aed;
+    --amber:#f5b562;
+    --ok:#34d399;
+    --warn:#f5b562;
+    --err:#f87171;
+    --font-display:"Fraunces", ui-serif, Georgia, serif;
+    --font-body:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --c1:#60a5fa;  /* ARABL  */
+    --c2:#34d399;  /* SRPP   */
+    --c3:#f472b6;  /* SOCSC  */
+    --c4:#fbbf24;  /* CS     */
+    --c5:#a78bfa;  /* CDAD   */
+    --c6:#fb7185;
+    --c7:#22d3ee;
+    --c8:#f97316;
+    --c9:#84cc16;
+    --c10:#e879f9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin:0; padding:0;
+    background:var(--bg); color:var(--ink);
+    font-family:var(--font-body);
+    font-size:14px; line-height:1.5;
+    font-feature-settings:"ss01","cv11";
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+  body {
+    background:
+      radial-gradient(ellipse 1200px 600px at 15% -10%, rgba(167,139,250,0.09), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 90% 5%, rgba(245,181,98,0.05), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+  }
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.035 0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+    opacity:0.6; mix-blend-mode:overlay;
+  }
+  header, .app, footer { position:relative; z-index:1; }
+  ::selection { background:rgba(167,139,250,0.32); color:#fff; }
+
+  /* Scrollbar refinement */
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#2a2f42; border-radius:10px; border:2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background:#3a4062; }
+
+  header {
+    padding:18px 28px 16px;
+    border-bottom:1px solid var(--line-soft);
+    display:flex; align-items:baseline; gap:22px;
+    background:linear-gradient(180deg, rgba(22,24,36,0.6) 0%, transparent 100%);
+    backdrop-filter:blur(8px);
+  }
+  header .brand { display:flex; align-items:baseline; gap:14px; }
+  header .mark {
+    font-family:var(--font-display);
+    font-weight:600; font-size:13px;
+    font-style:italic;
+    letter-spacing:0.02em;
+    color:var(--accent-2);
+    padding:3px 10px;
+    border:1px solid rgba(167,139,250,0.35);
+    border-radius:999px;
+    background:rgba(167,139,250,0.08);
+    white-space:nowrap;
+  }
+  header h1 {
+    margin:0;
+    font-family:var(--font-display);
+    font-size:24px;
+    font-weight:500;
+    letter-spacing:-0.022em;
+    font-variation-settings:"opsz" 48, "SOFT" 30;
+    line-height:1.1;
+  }
+  header h1 .accent { font-style:italic; color:var(--accent-2); font-weight:400; }
+  header .sub {
+    color:var(--ink-dim); font-size:12.5px;
+    letter-spacing:0.005em;
+    border-left:1px solid var(--line);
+    padding-left:16px;
+    align-self:center;
+  }
+  .countdown {
+    margin-left:auto;
+    font-family:var(--font-mono);
+    font-size:11.5px; padding:7px 13px;
+    border-radius:8px;
+    background:linear-gradient(180deg, #221c36 0%, #1a1628 100%);
+    border:1px solid rgba(167,139,250,0.28);
+    color:var(--accent-2);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    letter-spacing:0.01em;
+    box-shadow:0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .countdown.soon { background:#3a2712; border-color:#6b4a1e; color:#fbbf24; }
+  .countdown.urgent {
+    background:#3b1e1e; border-color:#6b2d2d; color:#fecaca;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  .countdown.open {
+    background:#163d2e; border-color:#2e7458; color:#6ee7b7;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  .countdown b { color:inherit; font-weight:700; }
+  .app { display:grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 70px); }
+
+  /* ── Left panel ─────────────────────────── */
+  aside {
+    border-right:1px solid var(--line-soft);
+    background:linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+    padding:20px 18px; overflow-y:auto;
+  }
+  aside h2 {
+    font-family:var(--font-display);
+    font-size:12px; font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink);
+    margin:22px 0 10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line-soft);
+    position:relative;
+  }
+  aside h2::before {
+    content:""; position:absolute; bottom:-1px; left:0;
+    width:28px; height:1px; background:var(--accent);
+  }
+  aside h2:first-child { margin-top: 0; }
+
+  .course {
+    background:linear-gradient(180deg, var(--panel-2) 0%, #191c28 100%);
+    border:1px solid var(--line); border-radius:9px;
+    padding:11px 12px 11px 26px; margin-bottom:8px; cursor:pointer;
+    transition:border-color .18s ease, background .18s ease, opacity .18s, transform .18s, box-shadow .18s;
+    position:relative;
+    box-shadow:0 1px 0 rgba(255,255,255,0.02) inset, 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .course:hover {
+    border-color:#3d4566;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px -4px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.03) inset;
+  }
+  .course .drag-handle {
+    position:absolute; left:4px; top:0; bottom:0;
+    width:18px; display:flex; align-items:center; justify-content:center;
+    color:#4a5468; font-size:14px; line-height:1;
+    cursor:grab; user-select:none;
+    opacity:0.55; transition:opacity .15s, color .15s;
+  }
+  .course:hover .drag-handle { opacity:1; color:var(--ink-dim); }
+  .course .drag-handle:active { cursor:grabbing; }
+  .course.dragging { opacity:0.35; }
+  .course.drop-before { box-shadow: 0 -2px 0 0 var(--accent) inset, 0 -2px 0 0 var(--accent); }
+  .course.drop-after  { box-shadow: 0 2px 0 0 var(--accent) inset, 0 2px 0 0 var(--accent); }
+  .course.on {
+    border-color:var(--accent);
+    background:linear-gradient(180deg, #252142 0%, #1d1b35 100%);
+    box-shadow:0 0 0 1px rgba(167,139,250,0.25), 0 4px 14px -6px rgba(124,58,237,0.45);
+  }
+  .course.conflicting { border-color:var(--err); }
+  .course.blocked {
+    border-color:#6b2d2d;
+    background: linear-gradient(180deg, #2a1515 0%, var(--panel-2) 80%);
+  }
+  .course.blocked .code::before {
+    content:"⛔ "; font-size:11px; vertical-align:1px;
+  }
+  .prereq-warn {
+    margin-top:8px; padding:6px 8px; border-radius:5px;
+    background:#2a1515; border:1px solid #6b2d2d;
+    color:#fca5a5; font-size:11px; line-height:1.4;
+  }
+  .prereq-warn strong { color:#fecaca; }
+  .prereq-warn .hint { color:#f59e0b; font-size:10.5px; margin-top:3px; display:block; font-style:italic; }
+  .prereq-ok {
+    margin-top:8px; font-size:10.5px; color:#6ee7b7;
+    padding:3px 0;
+  }
+  .seats-badge {
+    display:inline-block; margin-left:6px; padding:1px 6px;
+    border-radius:3px; font-size:10px; font-weight:500;
+    vertical-align:1px; letter-spacing:0.02em;
+  }
+  .seats-badge.open     { background:#163d2e; color:#6ee7b7; }
+  .seats-badge.waitlist { background:#3a2712; color:#fbbf24; }
+  .seats-badge.closed   { background:#3b1e1e; color:#fca5a5; }
+  .course .row1 { display:flex; align-items:center; gap:8px; }
+  .course .swatch {
+    width:10px; height:10px; border-radius:2px; flex-shrink:0;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.3), 0 0 8px -2px currentColor;
+  }
+  .course .code {
+    font-weight:600; font-size:13px;
+    font-family:var(--font-mono);
+    letter-spacing:-0.01em;
+  }
+  .course .title { color:var(--ink-dim); font-size:12px; margin-top:3px; line-height:1.4; }
+  .course .meta {
+    color:var(--ink-dim); font-size:11px; margin-top:5px;
+    font-family:var(--font-mono);
+    font-variant-numeric:tabular-nums;
+  }
+  .course .check { margin-left:auto; width:16px; height:16px; border:1.5px solid #3a4358;
+                   border-radius:4px; display:grid; place-items:center; flex-shrink:0; }
+  .course.on .check { background:var(--accent); border-color:var(--accent); }
+  .course.on .check::after { content:"✓"; font-size:11px; color:white; line-height:1; }
+
+  /* Per-card minimize toggle */
+  .course .minimize {
+    background:transparent; border:none; color:var(--ink-dim);
+    font-size:13px; line-height:1; cursor:pointer; padding:2px 4px;
+    border-radius:4px; margin-right:-2px;
+    font-family:inherit; flex-shrink:0;
+  }
+  .course .minimize:hover { color:var(--ink); background:#262c39; }
+
+  /* Per-card hide toggle (keeps data in background; restorable from panel below) */
+  .course .hide-btn {
+    background:transparent; border:none; color:var(--ink-dim);
+    font-size:13px; line-height:1; cursor:pointer; padding:2px 5px;
+    border-radius:4px; margin-right:-2px;
+    font-family:inherit; flex-shrink:0;
+    opacity:0; transition:opacity .15s, color .15s, background .15s;
+  }
+  .course:hover .hide-btn { opacity:0.55; }
+  .course .hide-btn:hover { opacity:1; color:#fca5a5; background:#2a1515; }
+
+  /* Hidden-courses restore panel */
+  .hidden-panel {
+    margin-top:12px; padding:10px 12px;
+    background:var(--panel-2); border:1px dashed var(--line); border-radius:8px;
+  }
+  .hidden-panel summary {
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ink-dim); cursor:pointer; list-style:none;
+    display:flex; align-items:center; gap:6px; outline:none;
+  }
+  .hidden-panel summary::-webkit-details-marker { display:none; }
+  .hidden-panel summary::before { content:"▸"; font-size:10px; transition:transform .15s; display:inline-block; }
+  .hidden-panel[open] summary::before { transform:rotate(90deg); }
+  .hidden-panel summary:hover { color:var(--ink); }
+  .hidden-panel .count-pill {
+    margin-left:auto; padding:1px 7px; border-radius:999px;
+    background:#262c39; font-size:10px; color:var(--ink-dim);
+    font-variant-numeric:tabular-nums;
+  }
+  .hidden-panel .hint {
+    font-size:10.5px; color:var(--ink-dim); font-style:italic;
+    margin:8px 0 6px;
+  }
+  .hidden-list { display:flex; flex-direction:column; gap:4px; margin-top:4px; }
+  .hidden-pill {
+    display:flex; align-items:center; gap:8px;
+    padding:6px 9px; background:#1f2330; border:1px solid var(--line);
+    border-radius:6px; cursor:pointer;
+    transition:border-color .12s, background .12s;
+  }
+  .hidden-pill:hover { border-color:var(--accent); background:#262c39; }
+  .hidden-pill .swatch { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+  .hidden-pill .code { font-size:11.5px; font-weight:600; color:var(--ink); flex-shrink:0; }
+  .hidden-pill .title { font-size:11px; color:var(--ink-dim); flex:1; min-width:0;
+                        overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hidden-pill .restore { color:var(--ok); font-size:15px; font-weight:700; line-height:1; padding:0 2px; }
+
+  /* Collapsed state: hide everything except row1 + a compact time line */
+  .course.collapsed { padding-top:8px; padding-bottom:8px; margin-bottom:4px; }
+  .course.collapsed .title,
+  .course.collapsed .meta,
+  .course.collapsed .tags-label,
+  .course.collapsed .tags,
+  .course.collapsed .prereq-warn,
+  .course.collapsed .prereq-ok,
+  .course.collapsed .ror-block,
+  .course.collapsed .needs-verify,
+  .course.collapsed .section-toggle { display:none; }
+  .course.collapsed .collapsed-time {
+    font-size:11px; color:var(--ink-dim); margin-left:18px;
+    margin-top:3px; font-variant-numeric:tabular-nums;
+  }
+  .course.collapsed.on .collapsed-time { color:#c4b5fd; }
+
+  /* Collapse / Expand all header control */
+  .courselist-controls {
+    display:flex; align-items:center; justify-content:flex-end;
+    margin: -4px 0 6px; gap:8px;
+  }
+  .courselist-controls button {
+    background:transparent; border:none; color:var(--ink-dim);
+    font-size:10.5px; letter-spacing:0.04em; cursor:pointer;
+    font-family:inherit; padding:2px 6px; border-radius:3px;
+  }
+  .courselist-controls button:hover { color:var(--ink); background:#262c39; }
+
+  .section-toggle { display:flex; flex-direction:column; gap:4px; margin-top:8px; }
+  .section-toggle .sec-row { display:flex; align-items:center; gap:6px; }
+  .section-toggle button {
+    flex:1; text-align:left; background:#262c39; border:1px solid var(--line); color:var(--ink-dim);
+    padding:6px 9px; border-radius:5px; font-size:11.5px; cursor:pointer;
+    font-family:inherit; line-height:1.35;
+    display:flex; flex-direction:column; gap:1px;
+  }
+  .section-toggle button.active { background:var(--accent); color:white; border-color:var(--accent); }
+  .section-toggle button:hover:not(.active) { background:#2d3444; border-color:#3a4358; }
+  .section-toggle .sec-label { font-weight:600; font-size:11.5px; }
+  .section-toggle .sec-time { font-size:10.5px; opacity:0.85; font-variant-numeric:tabular-nums; }
+  .section-toggle .sec-hint {
+    color:var(--ink-dim); font-size:10.5px; padding:2px 2px 0; font-style:italic;
+  }
+
+  .stats { background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+           padding:10px 12px; margin-bottom:8px; }
+  .stats .line { display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; }
+  .stats .k { color:var(--ink-dim); }
+  .stats .v.ok { color:var(--ok); }
+  .stats .v.err { color:var(--err); }
+
+  /* ── Requirement tags on course cards ── */
+  .tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+  .tag {
+    font-size:10px; font-weight:500; padding:2px 6px; border-radius:3px;
+    line-height:1.3; letter-spacing:0.01em; white-space:nowrap;
+    border:1px solid transparent;
+  }
+  .tag.core    { background:#2a1f3d; color:#c4b5fd; border-color:#4c3a6e; }
+  .tag.speh    { background:#3b1e1e; color:#fca5a5; border-color:#6b2d2d; }
+  .tag.spet    { background:#3a2712; color:#fbbf24; border-color:#6b4a1e; }
+  .tag.methods { background:#132a1e; color:#6ee7b7; border-color:#1f4a38; }
+  .tag.ipp     { background:#1a2540; color:#93c5fd; border-color:#2c3e6b; }
+  .tag.ssgp    { background:#2a1a2d; color:#f9a8d4; border-color:#4a2e52; }
+  .tag.sc      { background:#1e2e2a; color:#5eead4; border-color:#2e4a45; }
+  .tag.lang    { background:#1f2430; color:#94a3b8; border-color:#333b4c; }
+  .tag.none    { background:#1f2430; color:#7b8594; border-color:#333b4c; }
+
+  /* ── Requirements coverage panel ── */
+  .coverage {
+    background:linear-gradient(180deg, var(--panel-2) 0%, #191c28 100%);
+    border:1px solid var(--line-soft); border-radius:12px;
+    padding:14px 18px; margin-bottom:8px;
+  }
+  .coverage .row {
+    display:flex; align-items:center; gap:8px; padding:5px 0;
+    font-size:12px; border-bottom:1px solid var(--line);
+  }
+  .coverage .row:last-child { border-bottom:none; }
+  .coverage .req {
+    flex:1; color:var(--ink); display:flex; align-items:center; gap:6px;
+  }
+  .coverage .req .dot {
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+  }
+  .coverage .req .dot.on      { background:var(--ok); }
+  .coverage .req .dot.partial { background:var(--warn); }
+  .coverage .req .dot.off     { background:#3a4358; }
+  .coverage .source {
+    color:var(--ink-dim); font-size:11px; white-space:nowrap;
+    max-width:150px; overflow:hidden; text-overflow:ellipsis;
+  }
+  .coverage .source.missing { color:#55606f; font-style:italic; }
+  .coverage .group-head {
+    font-family:var(--font-display);
+    font-size:11px; font-weight:600; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--accent-2);
+    padding:10px 0 5px; border-bottom:1px solid var(--line);
+  }
+  .coverage .group-head:first-child { padding-top:2px; }
+  .coverage .count {
+    color:var(--ink-dim); font-size:10.5px;
+    font-variant-numeric:tabular-nums;
+    background:#262c39; padding:1px 5px; border-radius:3px;
+  }
+  .coverage .count.done { background:#163d2e; color:#6ee7b7; }
+  .coverage .count.partial { background:#3a2712; color:#fbbf24; }
+
+  /* Wide layout when stats / coverage sit under the grid */
+  .stats-wide {
+    display:grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+    padding:16px 22px;
+    background:linear-gradient(180deg, var(--panel-2) 0%, #191c28 100%);
+    border-radius:12px;
+  }
+  .stats-wide .line {
+    flex-direction:column; align-items:flex-start; gap:6px;
+    padding:4px 18px; border-right:1px solid var(--line-soft);
+  }
+  .stats-wide .line:last-child { border-right:none; }
+  .stats-wide .line:first-child { padding-left:0; }
+  .stats-wide .k {
+    font-size:10px; text-transform:uppercase; letter-spacing:0.14em;
+    color:var(--ink-faint); font-weight:500;
+  }
+  .stats-wide .v {
+    font-family:var(--font-display);
+    font-size:22px; font-weight:500;
+    font-variation-settings:"opsz" 36;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-0.015em;
+    color:var(--ink);
+  }
+  @media (max-width: 900px) {
+    .stats-wide { grid-template-columns: repeat(2, 1fr); }
+    .stats-wide .line { border-right:none; border-bottom:1px solid var(--line); padding:6px 0; }
+  }
+
+  .coverage-section { margin-top:24px; }
+  .coverage-section .section-title {
+    font-family:var(--font-display);
+    font-size:15px; font-weight:500;
+    font-style:italic;
+    font-variation-settings:"opsz" 48;
+    letter-spacing:-0.01em;
+    color:var(--ink); margin:0 0 12px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .coverage-section .section-title::after {
+    content:""; flex:1; height:1px;
+    background:linear-gradient(90deg, var(--line) 0%, transparent 100%);
+  }
+  .coverage-wide {
+    column-count: 2;
+    column-gap: 28px;
+    column-rule: 1px solid var(--line);
+    padding:14px 18px;
+  }
+  .coverage-wide .row,
+  .coverage-wide .group-head { break-inside: avoid; }
+  .coverage-wide .group-head:first-child { padding-top:2px; }
+  @media (min-width: 1400px) {
+    .coverage-wide { column-count: 3; }
+  }
+  .coverage-wide .source { max-width:220px; }
+  .tags-label {
+    font-size:10px; color:var(--ink-dim); text-transform:uppercase;
+    letter-spacing:0.06em; margin-top:6px; font-weight:500;
+  }
+
+  button.primary {
+    width:100%; padding:11px 14px;
+    background:linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
+    color:white; border:none;
+    border-radius:8px; font-size:13px; font-weight:600;
+    letter-spacing:0.01em;
+    font-family:var(--font-body);
+    cursor:pointer; margin-top:6px;
+    box-shadow:0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 12px -4px rgba(124,58,237,0.5);
+    transition:transform .15s, box-shadow .15s, filter .15s;
+  }
+  button.primary:hover {
+    filter:brightness(1.08);
+    box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 6px 18px -4px rgba(124,58,237,0.65);
+    transform:translateY(-1px);
+  }
+  button.primary:active { transform:translateY(0); }
+  button.ghost {
+    width:100%; padding:8px 12px; background:transparent; color:var(--ink-dim);
+    border:1px solid var(--line); border-radius:8px; font-size:12px; cursor:pointer;
+    font-family:var(--font-body); margin-top:6px;
+    transition:color .15s, border-color .15s, background .15s;
+  }
+  button.ghost:hover { color:var(--ink); border-color:#3d4566; background:rgba(167,139,250,0.05); }
+
+  /* ── Combos modal list ─────────────────── */
+  /* Combo filters panel */
+  .combo-filters {
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+    margin-bottom:8px; font-size:12px;
+  }
+  .combo-filters > summary {
+    cursor:pointer; padding:8px 12px; color:var(--ink-dim);
+    list-style:none; user-select:none; font-size:11.5px;
+  }
+  .combo-filters > summary::-webkit-details-marker { display:none; }
+  .combo-filters > summary::before { content:"▸ "; color:var(--accent); font-size:10px; }
+  .combo-filters[open] > summary::before { content:"▾ "; }
+  .combo-filters[open] > summary { border-bottom:1px solid var(--line); }
+  .combo-filters .active-badge {
+    background:var(--accent); color:white; border-radius:8px; padding:1px 6px;
+    font-size:10px; margin-left:4px; font-weight:500;
+  }
+  .filter-row {
+    display:flex; align-items:center; gap:8px; padding:6px 12px;
+    border-top:1px solid var(--line);
+  }
+  .filter-row:first-of-type { border-top:none; }
+  .filter-row label { flex:0 0 78px; color:var(--ink); font-weight:500; font-size:11.5px; }
+  .filter-row select {
+    flex:1; background:var(--panel); border:1px solid var(--line); color:var(--ink);
+    font-size:11.5px; padding:4px 6px; border-radius:4px; font-family:inherit;
+  }
+  .filter-row select:focus { outline:none; border-color:var(--accent); }
+  .filter-row select.non-default { color:var(--accent); font-weight:500; }
+
+  .combos { margin-top:8px; }
+  .combo {
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; margin-bottom:6px; cursor:pointer; font-size:12.5px;
+  }
+  .combo:hover { border-color:var(--accent); }
+  .combo.valid { border-left:3px solid var(--ok); }
+  .combo.invalid { border-left:3px solid var(--err); opacity:0.55; cursor:not-allowed; }
+  .combo .codes { font-weight:600; }
+  .combo .reason { color:var(--err); font-size:11px; margin-top:3px; }
+  .combo .days { color:var(--ink-dim); font-size:11px; margin-top:3px; }
+
+  /* ── Grid ───────────────────────────────── */
+  main { padding:22px 28px 28px; overflow:auto; }
+  .grid-wrap {
+    position:relative;
+    background:linear-gradient(180deg, var(--panel) 0%, #14161f 100%);
+    border:1px solid var(--line-soft);
+    border-radius:14px; padding:12px 12px 12px 56px;
+    box-shadow:0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+  .grid {
+    position:relative;
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .col { background:var(--panel-2); position:relative; min-height: 600px; }
+  .col .day-head {
+    position:sticky; top:0; z-index:2;
+    background:linear-gradient(180deg, #21253a 0%, var(--panel-2) 100%);
+    padding:10px 12px; font-size:10.5px; font-weight:600;
+    color:var(--ink); letter-spacing:0.18em; text-transform:uppercase;
+    border-bottom:1px solid var(--line);
+    font-family:var(--font-body);
+  }
+  .hourlines { position:absolute; inset:28px 0 0 0; pointer-events:none; }
+  .hourline {
+    position:absolute; left:0; right:0; border-top:1px dashed #232937;
+  }
+  .hourlabels {
+    position:absolute; left:0; top:48px; width:44px;
+    color:var(--ink-dim); font-size:10.5px; font-variant-numeric:tabular-nums;
+  }
+  .hourlabels div { position:absolute; right:8px; transform:translateY(-7px); }
+
+  .block {
+    position:absolute; left:5px; right:5px;
+    border-radius:7px; padding:6px 8px; color:white;
+    font-size:11.5px; line-height:1.3;
+    overflow:hidden; cursor:default;
+    box-shadow: 0 2px 6px -1px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.08) inset;
+    border-left:3px solid rgba(255,255,255,0.5);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .block:hover {
+    transform:translateX(1px);
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.12) inset;
+  }
+  .block .bcode { font-family:var(--font-mono); letter-spacing:-0.01em; }
+  .block.conflict {
+    background: repeating-linear-gradient(
+      45deg, var(--err), var(--err) 6px, #c92a2a 6px, #c92a2a 12px
+    ) !important;
+    border-left-color: white;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { filter: brightness(1.2); } }
+
+  .block.ghost {
+    opacity: 0.55;
+    border: 2px dashed rgba(255,255,255,0.85);
+    background: transparent !important;
+    color: var(--ink);
+    box-shadow: none;
+  }
+  .block.ghost .bcode::before { content:"👻 "; }
+
+  .block .bcode { font-weight:700; font-size:11.5px; }
+  .block .btime { font-size:10.5px; opacity:0.9; }
+  .block .binstr { font-size:10.5px; opacity:0.85; font-style:italic; }
+
+  .banner {
+    background: #2a1a1a; border:1px solid var(--err); border-radius:8px;
+    padding:10px 12px; margin-bottom:12px; color:#fca5a5; font-size:12.5px;
+    display:none;
+  }
+  .banner.show { display:block; }
+  .banner strong { color: var(--err); }
+
+  .legend {
+    display:flex; gap:18px; margin-bottom:14px;
+    font-size:11px; color:var(--ink-dim); flex-wrap:wrap;
+    padding:8px 14px; background:rgba(22,24,36,0.4);
+    border:1px solid var(--line-soft); border-radius:10px;
+  }
+  .legend span { display:inline-flex; align-items:center; gap:7px; font-family:var(--font-mono); letter-spacing:-0.01em; }
+  .legend i {
+    width:10px; height:10px; border-radius:3px; display:inline-block;
+    box-shadow:0 0 8px -2px currentColor;
+  }
+
+  footer {
+    padding:14px 28px; color:var(--ink-faint); font-size:11.5px;
+    border-top:1px solid var(--line-soft);
+    background:var(--bg-2);
+    font-style:italic;
+  }
+  footer code {
+    font-family:var(--font-mono); font-size:11px;
+    background:rgba(167,139,250,0.08); padding:1px 6px; border-radius:3px;
+    color:var(--accent-2); font-style:normal;
+  }
+
+  /* ── Delete × on user-added courses ─── */
+  .course .del {
+    position:absolute; top:6px; right:32px; width:18px; height:18px;
+    border-radius:4px; display:grid; place-items:center;
+    color:var(--ink-dim); font-size:13px; cursor:pointer; background:transparent;
+    border:none; font-family:inherit; line-height:1;
+  }
+  .course .del:hover { background:var(--err); color:white; }
+  .course { position:relative; }
+
+  /* ── Modal ────────────────────────────── */
+  .modal-bg {
+    position:fixed; inset:0; background:rgba(8,10,14,0.75); z-index:100;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-bg.show { display:flex; }
+  .modal {
+    background:linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+    border:1px solid var(--line); border-radius:16px;
+    width:100%; max-width:580px; max-height:90vh; overflow-y:auto;
+    padding:26px 28px;
+    box-shadow:0 24px 60px -20px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset;
+    animation:modalIn .25s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes modalIn { from { opacity:0; transform:translateY(8px) scale(0.98); } to { opacity:1; transform:none; } }
+  .modal h3 {
+    margin:0 0 6px;
+    font-family:var(--font-display);
+    font-size:22px; font-weight:500;
+    letter-spacing:-0.02em;
+    font-variation-settings:"opsz" 48;
+  }
+  .modal .sub { color:var(--ink-dim); font-size:12.5px; margin-bottom:14px; }
+  .modal textarea {
+    width:100%; min-height:260px; background:var(--panel-2);
+    border:1px solid var(--line); border-radius:8px; padding:12px;
+    color:var(--ink); font:12.5px/1.5 "SF Mono", ui-monospace, Menlo, monospace;
+    resize:vertical;
+  }
+  .modal textarea:focus { outline:none; border-color:var(--accent); }
+  .modal .actions { display:flex; gap:8px; margin-top:14px; justify-content:flex-end; }
+  .modal .actions button { padding:8px 14px; border-radius:6px; font-size:13px;
+                           cursor:pointer; font-family:inherit; border:1px solid var(--line); }
+  .modal .actions .save { background:var(--accent); color:white; border-color:var(--accent); }
+  .modal .actions .save:hover { background:#7c4aef; }
+  .modal .actions .cancel { background:transparent; color:var(--ink-dim); }
+  .modal .actions .cancel:hover { color:var(--ink); }
+  .modal .err-msg { color:var(--err); font-size:12px; margin-top:8px; min-height:16px; }
+  .modal details { margin-top:10px; font-size:12px; color:var(--ink-dim); }
+  .modal details pre { background:var(--panel-2); border:1px solid var(--line);
+                       border-radius:6px; padding:10px; font-size:11.5px;
+                       overflow-x:auto; color:var(--ink); }
+
+  /* Note-block CSS */
+  .ror-block {
+    margin-top:6px; font-size:10.5px; line-height:1.45; padding:5px 7px;
+    background:#1a1f2a; border-left:2px solid var(--accent);
+    color:var(--ink-dim); border-radius:0 4px 4px 0;
+  }
+  .ror-block .ror-head {
+    font-weight:600; color:#c4b5fd; font-size:10px;
+    letter-spacing:0.06em; text-transform:uppercase; margin-bottom:2px;
+    display:flex; align-items:center; gap:4px;
+  }
+  .ror-block.pos    .ror-head { color:#6ee7b7; }
+  .ror-block.mixed  .ror-head { color:#fbbf24; }
+  .ror-block.gated  .ror-head { color:#fca5a5; }
+  .ror-block.nodata .ror-head { color:#7b8594; }
+  .needs-verify {
+    margin-top:6px; padding:5px 7px; border-radius:4px;
+    background:#2a220f; border:1px dashed #6b5020; color:#fbbf24;
+    font-size:10.5px; line-height:1.4;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="mark">NYUAD · Fall 2026</span>
+    <h1>Schedule <span class="accent">Builder</span></h1>
+  </div>
+  <span class="sub">SRPP BA — conflicts &amp; requirement coverage in real time</span>
+  <span id="countdown" class="countdown" title="Course data is a snapshot of public NYUAD Fall 2026 listings">Demo · Fall 2026 snapshot · sample student</span>
+</header>
+
+<div class="app">
+
+  <!-- ===== LEFT PANEL ===== -->
+  <aside>
+    <h2 style="display:flex;align-items:center;justify-content:space-between;">
+      <span>Candidate Courses</span>
+      <button class="ghost" id="btnAdd" style="width:auto;padding:4px 10px;margin:0;font-size:11.5px;">+ Add</button>
+    </h2>
+    <div class="courselist-controls">
+      <button id="btnCollapseAll" title="Minimize every card to a single line">⊟ Collapse all</button>
+      <button id="btnExpandAll" title="Expand every card">⊞ Expand all</button>
+    </div>
+    <div id="courseList"></div>
+
+    <h2>Combo Explorer</h2>
+    <details class="combo-filters" id="comboFilters">
+      <summary>Filters <span id="filterBadge" class="active-badge" style="display:none;">0</span></summary>
+      <div class="filter-row">
+        <label>Arabic</label>
+        <select data-filter="lang">
+          <option value="any">Any</option>
+          <option value="required">Must include</option>
+          <option value="excluded">Exclude</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>SPEH</label>
+        <select data-filter="speh">
+          <option value="any">Any</option>
+          <option value="exactly1">Exactly 1</option>
+          <option value="atmost1">At most 1</option>
+          <option value="excluded">Exclude</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>SPET</label>
+        <select data-filter="spet">
+          <option value="any">Any</option>
+          <option value="exactly1">Exactly 1</option>
+          <option value="atmost1">At most 1</option>
+          <option value="excluded">Exclude</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>Methods</label>
+        <select data-filter="methods">
+          <option value="any">Any</option>
+          <option value="atleast1">At least 1</option>
+          <option value="atleast2">At least 2</option>
+          <option value="atmost2">At most 2</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>Math/CS</label>
+        <select data-filter="math">
+          <option value="any">Any</option>
+          <option value="atleast1">At least 1</option>
+          <option value="exactly1">Exactly 1</option>
+          <option value="excluded">Exclude</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>Core/GenEd</label>
+        <select data-filter="core">
+          <option value="any">Any</option>
+          <option value="atleast1">At least 1</option>
+          <option value="atleast2">At least 2</option>
+        </select>
+      </div>
+    </details>
+    <button class="primary" id="btnCombos">Find conflict-free 4-course combos</button>
+    <button class="ghost" id="btnClear">Clear selection</button>
+    <div class="combos" id="combosOut"></div>
+  </aside>
+
+  <!-- ===== MAIN GRID ===== -->
+  <main>
+    <div id="banner" class="banner"></div>
+
+    <div class="legend" id="legend"></div>
+
+    <div class="grid-wrap">
+      <div class="hourlabels" id="hourLabels"></div>
+      <div class="grid" id="grid">
+        <div class="col" data-day="M"><div class="day-head">Monday</div></div>
+        <div class="col" data-day="T"><div class="day-head">Tuesday</div></div>
+        <div class="col" data-day="W"><div class="day-head">Wednesday</div></div>
+        <div class="col" data-day="R"><div class="day-head">Thursday</div></div>
+        <div class="col" data-day="F"><div class="day-head">Friday</div></div>
+      </div>
+    </div>
+
+    <section class="coverage-section">
+      <h2 class="section-title">This week</h2>
+      <div class="stats stats-wide">
+        <div class="line"><span class="k">Selected</span><span class="v" id="stSel">0 / 4</span></div>
+        <div class="line"><span class="k">Hours / week</span><span class="v" id="stHrs">0.0 h</span></div>
+        <div class="line"><span class="k">Conflicts</span><span class="v" id="stConf">0</span></div>
+        <div class="line"><span class="k">Earliest start</span><span class="v" id="stEarly">—</span></div>
+        <div class="line"><span class="k">Latest end</span><span class="v" id="stLate">—</span></div>
+      </div>
+    </section>
+
+    <section class="coverage-section">
+      <h2 class="section-title">Requirement coverage</h2>
+      <div class="coverage coverage-wide" id="coverage"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ===== ADD COURSE MODAL ===== -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3>Add a course</h3>
+    <div class="sub">Paste the course details below. Any course you add here persists in this browser.</div>
+    <textarea id="modalInput" spellcheck="false" placeholder="see format below"></textarea>
+    <div class="err-msg" id="modalErr"></div>
+
+    <details style="margin-top:10px;" id="llmHelper" open>
+      <summary>🤖 Let AI format raw text for me</summary>
+      <div style="margin-top:8px;font-size:12px;color:var(--ink-dim);">
+        Paste messy course info (from Albert, the NYUAD course list, the docx — whatever). Click <em>Format with AI</em> and it'll fill the textarea above automatically. Or copy the prompt to paste into any LLM manually.
+      </div>
+      <textarea id="rawInput" spellcheck="false"
+        style="min-height:120px;margin-top:8px;"
+        placeholder="Paste raw course text here — any format"></textarea>
+      <div style="display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+        <button class="save" id="formatWithAI" style="padding:7px 12px;font-size:12px;">✨ Format with AI</button>
+        <button class="cancel" id="copyLlmPrompt" style="padding:7px 12px;font-size:12px;border:1px solid var(--line);">📋 Copy prompt only</button>
+        <span id="copyStatus" style="color:var(--ok);font-size:11.5px;flex-basis:100%;"></span>
+      </div>
+      <div style="margin-top:6px;font-size:11px;color:var(--ink-dim);">
+        <span id="apiKeyStatus">No API key saved.</span>
+        <a href="#" id="setApiKey" style="color:var(--accent);margin-left:6px;">Set / change key</a>
+        <a href="#" id="clearApiKey" style="color:var(--err);margin-left:6px;display:none;">Clear</a>
+      </div>
+    </details>
+
+    <details>
+      <summary>Format &amp; example (click to expand)</summary>
+      <pre>Code: CSTS-UH 1012
+Title: Wealth of Nations
+Instructor: (TBD)
+Tags: speh
+
+Section: §001
+MW 11:20-12:35</pre>
+      <div style="margin-top:6px;">
+        • <strong>Days</strong>: <code>M T W R F</code> (R = Thursday). Combine like <code>MW</code> or <code>TR</code>.<br>
+        • <strong>Times</strong>: 24-hour <code>HH:MM-HH:MM</code>.<br>
+        • <strong>Tags</strong> (optional, space/comma separated): <code>speh spet methods ipp ssgp sc core-di core-ei core-qr core-is core-adt core-cea core-sts lang</code>. Tags show what SRPP / Core bucket the course satisfies.<br>
+        • A course can have one or more <strong>Section:</strong> blocks — they become mutually exclusive alternatives (like Arabic §001/§002). Each section can have multiple day/time lines (e.g. a lecture + lab).
+      </div>
+    </details>
+    <div class="actions">
+      <button class="cancel" id="modalCancel">Cancel</button>
+      <button class="save" id="modalSave">Add course</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Data sources: <code>Course Selection.docx</code> (2026-04-21) · SRPP tags from <a href="https://bulletins.nyu.edu/undergraduate/abu-dhabi/programs/social-research-public-policy-ba/" target="_blank" style="color:var(--accent)">2025-26 NYU Bulletin</a>. Verify live seats + times on Albert before enrollment.
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   COURSE DATA — edit here if sections change.
+   Each course has one or more "sections" (selectable variants).
+   Meetings: day codes M,T,W,R,F with HH:MM start/end.
+   ───────────────────────────────────────────────────────────── */
+/* Requirement tags (multiple allowed per course).
+   Recognized codes:
+     core-di  = Core Competency: Data and Discovery
+     core-ei  = Gen Ed: Experimental Inquiry
+     core-qr  = Gen Ed: Quantitative Reasoning
+     core-is  = Gen Ed: Islamic Studies
+     core-adt = Core Competency: Arts, Design, and Technology
+     core-cea = Core Competency: Cultural Exploration Analysis
+     core-sts = Core Competency: Structures of Thought and Society
+     speh     = SRPP FSS: Social, Political, and Economic History
+     spet     = SRPP FSS: Social, Political, and Economic Theory
+     methods  = SRPP Methods Elective
+     ipp      = SRPP Institutions and Public Policy Elective
+     ssgp     = SRPP Social Structure & Global Processes Elective
+     sc       = SRPP Society and Culture Elective
+     lang     = Language / Arabic minor (not an SRPP bucket)
+*/
+const COURSES = [
+  {
+    id: "ARABL", code: "ARABL-UH 2110", title: "Intermediate Arabic 1",
+    color: "var(--c1)", instructor: "Laila Familiar",
+    tags: ["lang"],
+    prereq: { all:["ARABL-UH 1120"] },
+    seats: "Open",
+    sections: [
+      { id:"ARABL-001", label:"§001",
+        meetings:[
+          {d:"M",s:"08:30",e:"09:45"},{d:"W",s:"08:30",e:"09:45"},
+          {d:"T",s:"08:30",e:"09:45"},{d:"R",s:"08:30",e:"09:45"},
+        ]
+      },
+      { id:"ARABL-002", label:"§002",
+        meetings:[
+          {d:"M",s:"09:55",e:"11:10"},{d:"W",s:"09:55",e:"11:10"},
+          {d:"T",s:"09:55",e:"11:10"},{d:"R",s:"09:55",e:"11:10"},
+        ]
+      },
+    ]
+  },
+  {
+    id:"HIST", code:"HIST-UH 2010", title:"History and Globalization",
+    color:"var(--c6)", instructor:"Nelida Fuccaro",
+    tags: ["speh", "core-sts"],
+    prereq: null,
+    seats: "Open",
+    sections:[{ id:"HIST-001", label:"§001",
+      meetings:[ {d:"M",s:"09:55",e:"11:10"}, {d:"W",s:"09:55",e:"11:10"} ]
+    }]
+  },
+  {
+    id:"SRPP", code:"SRPP-UH 3215", title:"Quantitative Data Analysis",
+    color:"var(--c2)", instructor:"Kornrich + Laouina",
+    tags: ["methods"],
+    prereq: { all:["SOCSC-UH 1010Q"] },
+    seats: "Open",
+    sections:[{ id:"SRPP-001", label:"Lecture + Fri lab",
+      meetings:[
+        {d:"T",s:"13:55",e:"15:10"},
+        {d:"R",s:"13:55",e:"15:10"},
+        {d:"F",s:"10:40",e:"11:55", tag:"lab"},
+      ]
+    }]
+  },
+  {
+    id:"SOCSC", code:"SOCSC-UH 2213", title:"Textual Analysis for Social Sciences",
+    color:"var(--c3)", instructor:"Park + Saboor (REC)",
+    tags: ["methods"],
+    prereq: { any:["ECON-UH 2020","POLSC-UH 2211"], note:"R programming strongly recommended" },
+    seats: "Open",
+    sections:[{ id:"SOCSC-001", label:"Lecture + rec",
+      meetings:[
+        {d:"M",s:"11:20",e:"12:35"},
+        {d:"W",s:"11:20",e:"12:35"},
+        {d:"R",s:"11:20",e:"12:35", tag:"rec"},
+      ]
+    }]
+  },
+  {
+    id:"CS", code:"CS-UH 2219", title:"Computational Social Science",
+    color:"var(--c4)", instructor:"AlShebli + Saboor",
+    tags: ["methods", "core-ei"],
+    prereq: { any:["CS-UH 1052","SOCSC-UH 2214"] },
+    seats: "Wait List (8)",
+    sections:[{ id:"CS-001", label:"§001",
+      meetings:[ {d:"T",s:"13:55",e:"15:10"}, {d:"R",s:"13:55",e:"15:10"} ]
+    }]
+  },
+  {
+    id:"CDAD", code:"CDAD-UH 1040", title:"AI and Human Decisions",
+    color:"var(--c5)", instructor:"(not listed yet)",
+    tags: ["core-di"],
+    prereq: null,
+    seats: "Open",
+    sections:[{ id:"CDAD-001", label:"§001",
+      meetings:[
+        {d:"F",s:"09:20",e:"10:35"},
+        {d:"T",s:"09:55",e:"11:10"},
+        {d:"R",s:"09:55",e:"11:10"},
+      ]
+    }]
+  },
+  /* ─── Backup SPEH options — verified live on Albert 2026-04-22 ─── */
+  {
+    id:"LAWEMP", code:"CSTS-UH 1125X", title:"Law and Empire",
+    color:"var(--c7)", instructor:"Adeel Hussain",
+    tags: ["speh", "core-is", "core-sts"],
+    prereq: null,
+    seats: "Open",
+    sections:[{ id:"LAWEMP-001", label:"§001",
+      meetings:[ {d:"M",s:"15:35",e:"16:50"}, {d:"W",s:"15:35",e:"16:50"} ]
+    }]
+  },
+  {
+    id:"WOFN", code:"CSTS-UH 1012", title:"Wealth of Nations",
+    color:"var(--c9)", instructor:"Abdul Noury",
+    tags: ["speh", "core-sts"],
+    prereq: null,
+    seats: "Open",
+    sections:[{ id:"WOFN-001", label:"§001",
+      meetings:[ {d:"T",s:"09:55",e:"11:10"}, {d:"R",s:"09:55",e:"11:10"} ]
+    }]
+  },
+  {
+    id:"GEPS", code:"SOCSC-UH 1011", title:"Global Economic, Political & Social Dev.",
+    color:"var(--c8)", instructor:"Paik + Bankuti",
+    tags: ["speh"],
+    prereq: null,
+    seats: "Open",
+    sections:[
+      { id:"GEPS-20320", label:"§001 · TR 09:55",
+        meetings:[ {d:"T",s:"09:55",e:"11:10"}, {d:"R",s:"09:55",e:"11:10"} ]
+      },
+      { id:"GEPS-20321", label:"§003 · TR 15:20",
+        meetings:[ {d:"T",s:"15:20",e:"16:35"}, {d:"R",s:"15:20",e:"16:35"} ]
+      },
+    ]
+  },
+  /* ─── CDAD-UH 1044EQ (researched 2026-04-22 via Park's Fall 2026 syllabus) ─── */
+  {
+    id:"CDAD1044", code:"CDAD-UH 1044EQ", title:"Human-Centered Data Science",
+    color:"var(--c5)", instructor:"Minsu Park",
+    tags: ["core-di", "core-ei"],
+    prereq: null,
+    seats: "Open",
+    note: "From the public Fall 2026 syllabus: hands-on Python data science plus readings on bias, ethics and privacy; no prior programming required. Graded on 4 assignments (15/20/15/20%), weekly reflections (10%), labs (10%), participation (10%). The EQ suffix means it counts for both Core: Data & Discovery and Gen Ed: Experimental Inquiry.",
+    sections:[{ id:"CDAD1044-001", label:"TR 08:30",
+      meetings:[ {d:"T",s:"08:30",e:"09:45"}, {d:"R",s:"08:30",e:"09:45"} ]
+    }]
+  },
+  /* ─── Additional Methods elective candidates (researched 2026-04-22) ─── */
+  {
+    id:"SOCSC2212", code:"SOCSC-UH 2212", title:"Research Design & Causality in Social Science",
+    color:"var(--c3)", instructor:"Peter van der Windt + Renata Ivanova (REC)",
+    tags: ["methods"],
+    prereq: { all:["SOCSC-UH 1010Q"] },
+    seats: "Open",
+    sections:[{ id:"SOCSC2212-001", label:"Lecture + Fri rec",
+      meetings:[
+        {d:"M",s:"17:00",e:"18:15"},
+        {d:"W",s:"17:00",e:"18:15"},
+        {d:"F",s:"10:40",e:"11:55", tag:"rec"},
+      ]
+    }]
+  },
+  {
+    id:"SRPP3214", code:"SRPP-UH 3214", title:"Social Networks",
+    color:"var(--c2)", instructor:"Ben Rosche + Sara Saboor (REC)",
+    tags: ["methods"],
+    prereq: null, /* SOCSC-UH 1010Q is recommended, not required */
+    seats: "Open",
+    sections:[{ id:"SRPP3214-001", label:"Lecture + Fri rec",
+      meetings:[
+        {d:"M",s:"11:20",e:"12:35"},
+        {d:"W",s:"11:20",e:"12:35"},
+        {d:"F",s:"10:40",e:"11:55", tag:"rec"},
+      ]
+    }]
+  },
+  /* ─── Basic CS / Math intro candidates (researched 2026-04-22) ─── */
+  {
+    id:"CS1001", code:"CS-UH 1001", title:"Introduction to Computer Science",
+    color:"var(--c4)", instructor:"Pötsch / Chaqfeh (varies by section)",
+    tags: ["math"],
+    prereq: null,
+    seats: "Open",
+    sections:[
+      { id:"CS1001-20725", label:"Pötsch · MW 08:30–11:10",
+        meetings:[ {d:"M",s:"08:30",e:"11:10"}, {d:"W",s:"08:30",e:"11:10"} ]
+      },
+      { id:"CS1001-20726", label:"Chaqfeh · TR 08:30–11:10",
+        meetings:[ {d:"T",s:"08:30",e:"11:10"}, {d:"R",s:"08:30",e:"11:10"} ]
+      },
+      { id:"CS1001-20727", label:"Chaqfeh · MW 12:45–15:25",
+        meetings:[ {d:"M",s:"12:45",e:"15:25"}, {d:"W",s:"12:45",e:"15:25"} ]
+      },
+    ]
+  },
+  {
+    id:"CS1002", code:"CS-UH 1002", title:"Discrete Mathematics",
+    color:"var(--c4)", instructor:"Mahmoud / Chaqfeh (varies by section)",
+    tags: ["math"],
+    prereq: null,
+    seats: "Open",
+    sections:[
+      { id:"CS1002-20899", label:"Mahmoud · MW 14:10",
+        meetings:[ {d:"M",s:"14:10",e:"15:25"}, {d:"W",s:"14:10",e:"15:25"} ]
+      },
+      { id:"CS1002-20900", label:"staff · TR 09:55",
+        meetings:[ {d:"T",s:"09:55",e:"11:10"}, {d:"R",s:"09:55",e:"11:10"} ]
+      },
+      { id:"CS1002-20901", label:"Chaqfeh · TR 11:20",
+        meetings:[ {d:"T",s:"11:20",e:"12:35"}, {d:"R",s:"11:20",e:"12:35"} ]
+      },
+    ]
+  },
+  {
+    id:"MATH1012", code:"MATH-UH 1012", title:"Calculus w/ Applications to Science and Engineering",
+    color:"var(--c10)", instructor:"Bouarroudj / Zhao / Fayad (varies)",
+    tags: ["math"],
+    prereq: null, /* placement-gated */
+    seats: "Open",
+    sections:[
+      { id:"MATH1012-21835", label:"Bouarroudj · MW 12:45",
+        meetings:[ {d:"M",s:"12:45",e:"14:00"}, {d:"W",s:"12:45",e:"14:00"} ]
+      },
+      { id:"MATH1012-21841", label:"Zhao · MW 15:35",
+        meetings:[ {d:"M",s:"15:35",e:"16:50"}, {d:"W",s:"15:35",e:"16:50"} ]
+      },
+      { id:"MATH1012-21847", label:"Fayad · TR 09:55",
+        meetings:[ {d:"T",s:"09:55",e:"11:10"}, {d:"R",s:"09:55",e:"11:10"} ]
+      },
+      { id:"MATH1012-21845", label:"Fayad · TR 16:45",
+        meetings:[ {d:"T",s:"16:45",e:"18:00"}, {d:"R",s:"16:45",e:"18:00"} ]
+      },
+    ]
+  },
+  {
+    id:"MATH1013", code:"MATH-UH 1013", title:"Calculus w/ Applications to Economics",
+    color:"var(--c10)", instructor:"Paparella / Le Jan",
+    tags: ["math"],
+    prereq: null, /* placement-gated */
+    seats: "Open",
+    sections:[
+      { id:"MATH1013-20911", label:"Paparella · MW 11:20 + F 09:20 rec",
+        meetings:[
+          {d:"M",s:"11:20",e:"12:35"}, {d:"W",s:"11:20",e:"12:35"},
+          {d:"F",s:"09:20",e:"10:35", tag:"rec"},
+        ]
+      },
+      { id:"MATH1013-20912", label:"Le Jan · MW 15:35 + F 10:40 rec",
+        meetings:[
+          {d:"M",s:"15:35",e:"16:50"}, {d:"W",s:"15:35",e:"16:50"},
+          {d:"F",s:"10:40",e:"11:55", tag:"rec"},
+        ]
+      },
+    ]
+  },
+];
+
+/* ─────────── Sample student profile (demo) ───────────
+   A fictional rising sophomore in SRPP. Courses here count as "done" for
+   prereq checks. Replace with your own record to use the tool for real. */
+const USER_COMPLETED = new Set([
+  "SOCSC-UH 1010Q", "SOCSC-UH 1113", "SOCSC-UH 1314",
+  "ARABL-UH 1110", "ARABL-UH 1120", "WRIT-UH 1125",
+]);
+
+/* Requirement buckets the sample profile has already filled.
+   These pre-fill the coverage tracker before any new selection. */
+const PRIOR_SATISFIED = {
+  "req-socsc1010q": [{ code:"SOCSC-UH 1010Q", when:"Year 1" }],
+  "req-socsc1113":  [{ code:"SOCSC-UH 1113",  when:"Year 1" }],
+  "spet":           [{ code:"SOCSC-UH 1314",  when:"Year 1" }],
+  "core-qr":        [{ code:"SOCSC-UH 1010Q", when:"Year 1" }],
+};
+
+/* Prerequisite evaluator — AND across `all`, OR across `any`.
+   `prereqOverride` on a course flips ok→true (instructor permission granted). */
+function checkPrereq(c) {
+  if (!c.prereq) return { ok:true, missingAll:[], anyOptions:[], anyMet:true, note:"", override:null };
+  const all = c.prereq.all || [];
+  const any = c.prereq.any || [];
+  const missingAll = all.filter(code => !USER_COMPLETED.has(code));
+  const anyMet = any.length === 0 || any.some(code => USER_COMPLETED.has(code));
+  const baseOk = missingAll.length === 0 && anyMet;
+  return {
+    ok: baseOk || !!c.prereqOverride,
+    missingAll, anyOptions: any, anyMet,
+    note: c.prereq.note || "",
+    override: c.prereqOverride || null,
+  };
+}
+
+/* Tag → display metadata */
+const TAG_META = {
+  "core-di":  { label:"Core: Data & Discovery",     cls:"core" },
+  "core-ei":  { label:"Gen Ed: Experimental Inq.",  cls:"core" },
+  "core-qr":  { label:"Gen Ed: Quant. Reasoning",   cls:"core" },
+  "core-is":  { label:"Gen Ed: Islamic Studies",    cls:"core" },
+  "core-adt": { label:"Core: Arts/Design/Tech",     cls:"core" },
+  "core-cea": { label:"Core: Cultural Exploration", cls:"core" },
+  "core-sts": { label:"Core: Structures of Thought",cls:"core" },
+  "speh":     { label:"SRPP · SPEH",                cls:"speh" },
+  "spet":     { label:"SRPP · SPET",                cls:"spet" },
+  "methods":  { label:"SRPP · Methods",             cls:"methods" },
+  "ipp":      { label:"SRPP · IPP",                 cls:"ipp" },
+  "ssgp":     { label:"SRPP · SSGP",                cls:"ssgp" },
+  "sc":       { label:"SRPP · Society & Culture",   cls:"sc" },
+  "lang":     { label:"Arabic (language)",          cls:"lang" },
+};
+
+/* Full SRPP BA + Core/Gen Ed requirements tracker.
+   `need` is how many courses the degree requires in that bucket;
+   this semester's contribution is counted against it. */
+const REQUIREMENTS = [
+  /* Foundations of Social Science — 4 components per SRPP Bulletin */
+  { group:"Foundations", label:"SOCSC-UH 1010Q Statistics",    tag:"req-socsc1010q", need:1 },
+  { group:"Foundations", label:"SOCSC-UH 1113 Study of Society", tag:"req-socsc1113", need:1 },
+  { group:"Foundations", label:"SPET (1 required)",             tag:"spet", need:1 },
+  { group:"Foundations", label:"SPEH (1 required)",             tag:"speh", need:1 },
+  /* SRPP Major Electives — 2 each */
+  { group:"SRPP Major Electives", label:"Methods",     tag:"methods", need:2 },
+  { group:"SRPP Major Electives", label:"IPP",         tag:"ipp",     need:2 },
+  { group:"SRPP Major Electives", label:"SSGP",        tag:"ssgp",    need:2 },
+  { group:"SRPP Major Electives", label:"Society & Culture", tag:"sc", need:2 },
+  /* Core Competencies — 1 each + Colloquia */
+  { group:"Core Competencies", label:"Arts/Design/Tech",      tag:"core-adt", need:1 },
+  { group:"Core Competencies", label:"Cultural Exploration",  tag:"core-cea", need:1 },
+  { group:"Core Competencies", label:"Data & Discovery",      tag:"core-di",  need:1 },
+  { group:"Core Competencies", label:"Structures of Thought", tag:"core-sts", need:1 },
+  { group:"Core Competencies", label:"Semester Colloquium",   tag:"req-col-sem",   need:1 },
+  { group:"Core Competencies", label:"J-Term / Field Colloquia", tag:"req-col-field", need:2 },
+  /* Gen Ed single-course requirements */
+  { group:"Gen Ed", label:"Quantitative Reasoning", tag:"core-qr", need:1 },
+  { group:"Gen Ed", label:"Experimental Inquiry",   tag:"core-ei", need:1 },
+  { group:"Gen Ed", label:"Islamic Studies",        tag:"core-is", need:1 },
+];
+
+/* ─── Custom courses: persisted in localStorage ─── */
+const LS_KEY = "nyuad-fall26-custom-courses";
+function loadCustom() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function saveCustom(list) { localStorage.setItem(LS_KEY, JSON.stringify(list)); }
+
+/* Persist which cards are minimized */
+const LS_COLLAPSED_KEY = "nyuad-fall26-collapsed-courses";
+function loadCollapsed() {
+  try {
+    const raw = localStorage.getItem(LS_COLLAPSED_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch { return new Set(); }
+}
+function saveCollapsed() {
+  localStorage.setItem(LS_COLLAPSED_KEY, JSON.stringify([...collapsed]));
+}
+const collapsed = loadCollapsed();
+
+/* Persist which cards are hidden (dismissed from view but data kept in COURSES).
+   Hidden courses are skipped in the sidebar, the calendar (via cleared selection),
+   and the Combo Explorer pool — but can be restored any time from the panel below
+   the course list. All section/ROR/prereq data stays intact. */
+const LS_HIDDEN_KEY = "nyuad-fall26-hidden-courses";
+function loadHidden() {
+  try {
+    const raw = localStorage.getItem(LS_HIDDEN_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch { return new Set(); }
+}
+function saveHidden() {
+  localStorage.setItem(LS_HIDDEN_KEY, JSON.stringify([...hidden]));
+}
+const hidden = loadHidden();
+
+/* Persist user's preferred ordering of the course list */
+const LS_ORDER_KEY = "nyuad-fall26-course-order";
+function loadOrder() {
+  try {
+    const raw = localStorage.getItem(LS_ORDER_KEY);
+    if (!raw) return null;
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : null;
+  } catch { return null; }
+}
+function saveOrder() {
+  localStorage.setItem(LS_ORDER_KEY, JSON.stringify(COURSES.map(c => c.id)));
+}
+function applySavedOrder() {
+  const ids = loadOrder();
+  if (!ids) return;
+  const byId = new Map(COURSES.map(c => [c.id, c]));
+  const ordered = [];
+  for (const id of ids) if (byId.has(id)) { ordered.push(byId.get(id)); byId.delete(id); }
+  for (const c of byId.values()) ordered.push(c); // new courses go to the end
+  COURSES.length = 0;
+  COURSES.push(...ordered);
+}
+
+/* Merge built-in + custom into one array used everywhere */
+for (const c of loadCustom()) COURSES.push(c);
+applySavedOrder();
+
+/* grid bounds */
+const DAY_START = 8 * 60;   // 08:00 in minutes
+const DAY_END   = 18 * 60;  // 18:00
+const HEAD_PX   = 28;       // day-head height
+const GRID_PX   = 572;      // usable vertical px (col min-height 600 - head 28)
+
+const toMin = t => { const [h,m]=t.split(":").map(Number); return h*60+m; };
+const fmt   = m => `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;
+const pct   = m => ((m - DAY_START) / (DAY_END - DAY_START)) * GRID_PX + HEAD_PX;
+
+/* STATE: map courseId -> sectionId (null means not selected).
+   Default is a "safe 4-course plan":
+   ARABL §001 + HIST 2010 + SRPP 3215 (lab included) + CDAD 1040.
+   Zero prereq gaps, zero conflicts, 20 units, closes SPEH + 2 Cores. */
+const selection = {
+  ARABL: "ARABL-001",
+  HIST:  "HIST-001",
+  SRPP:  "SRPP-001",
+  SOCSC: null,   // off by default — prereq not met in the sample profile
+  CS:    null,   // WL(8) + prereq gap — treat as unreachable
+  CDAD:  "CDAD-001",
+};
+/* Custom courses default to off */
+for (const c of COURSES) if (!(c.id in selection)) selection[c.id] = null;
+
+/* ─── Render course list ─── */
+function renderCourseList() {
+  const el = document.getElementById("courseList");
+  el.innerHTML = "";
+  for (const c of COURSES) {
+    if (hidden.has(c.id)) continue;  /* hidden courses live in the restore panel below */
+    const picked = selection[c.id];
+    const isOn = !!picked;
+    const prereq = checkPrereq(c);
+    const blocked = !prereq.ok;
+    const div = document.createElement("div");
+    const isCollapsed = collapsed.has(c.id);
+    div.className = "course"
+      + (isOn ? " on" : "")
+      + (blocked ? " blocked" : "")
+      + (isCollapsed ? " collapsed" : "");
+    div.dataset.cid = c.id;
+
+    const tagList = (c.tags && c.tags.length)
+      ? c.tags.map(t => {
+          const m = TAG_META[t] || { label:t, cls:"none" };
+          return `<span class="tag ${m.cls}">${m.label}</span>`;
+        }).join("")
+      : `<span class="tag none">No major/core credit</span>`;
+
+    /* Seat-status pill */
+    const seatTxt = c.seats || "";
+    let seatCls = "";
+    if (/open/i.test(seatTxt))     seatCls = "open";
+    else if (/wait/i.test(seatTxt)) seatCls = "waitlist";
+    else if (/closed/i.test(seatTxt)) seatCls = "closed";
+    const seatPill = seatTxt ? `<span class="seats-badge ${seatCls}">${seatTxt}</span>` : "";
+
+    /* Prereq warning / OK block */
+    let prereqBlock = "";
+    if (blocked) {
+      const parts = [];
+      if (prereq.missingAll.length)
+        parts.push(`Missing required: <strong>${prereq.missingAll.join(", ")}</strong>`);
+      if (!prereq.anyMet && prereq.anyOptions.length)
+        parts.push(`Needs one of: <strong>${prereq.anyOptions.join(" / ")}</strong>`);
+      prereqBlock = `<div class="prereq-warn">⛔ ${parts.join("<br>")}` +
+        (prereq.note ? `<span class="hint">Note: ${prereq.note}</span>` : "") +
+        `<span class="hint">You probably can't self-enroll — instructor override required.</span></div>`;
+    } else if (prereq.override) {
+      prereqBlock = `<div class="prereq-ok">✓ Instructor permission granted — prereq waived` +
+        ` <em style="color:var(--ink-dim)">(${prereq.override.approvedBy}, ${prereq.override.on})</em>` +
+        (prereq.note ? `<span class="hint" style="color:#f59e0b;font-size:10.5px;margin-top:3px;display:block;font-style:italic;">Note: ${prereq.note}</span>` : "") +
+        `</div>`;
+    } else if (c.prereq) {
+      const satisfied = (c.prereq.all || []).concat(
+        (c.prereq.any || []).filter(code => USER_COMPLETED.has(code))
+      );
+      prereqBlock = `<div class="prereq-ok">✓ Prereq met: ${satisfied.join(", ")}${
+        prereq.note ? ` · <em style="color:var(--ink-dim)">${prereq.note}</em>` : ""
+      }</div>`;
+    }
+
+    /* Compact one-line summary shown when the card is collapsed */
+    const pickedSec = picked ? c.sections.find(s => s.id === picked) : null;
+    const compactTime = pickedSec
+      ? meetingsSummary(pickedSec.meetings)
+      : (c.sections.length === 1 ? meetingsSummary(c.sections[0].meetings) : "—");
+
+    const row1 = `
+      <div class="row1">
+        <span class="swatch" style="background:${c.color}"></span>
+        <div style="flex:1;min-width:0;">
+          <div class="code">${c.code}${seatPill}</div>
+        </div>
+        <button class="minimize" data-min title="${isCollapsed?'Expand':'Minimize'}">${isCollapsed?'▸':'▾'}</button>
+        <button class="hide-btn" data-hide title="Hide this card (data is kept — restore from panel below)">✕</button>
+        <div class="check"></div>
+      </div>
+      <div class="collapsed-time">${compactTime}</div>
+      <div class="title">${c.title}</div>
+      <div class="meta">${c.instructor}</div>
+      <div class="tags-label">Counts toward</div>
+      <div class="tags">${tagList}</div>
+      ${prereqBlock}
+      ${c.note ? `<div class="ror-block pos"><div class="ror-head">📄 Syllabus note</div><div>${c.note}</div></div>` : ""}
+      ${c.verifyNote ? `<div class="needs-verify">⚠ ${c.verifyNote}</div>` : ""}
+      ${c.needsVerify ? `<div class="needs-verify">⚠ ${c.needsVerify}</div>` : ""}`;
+
+    let sectionHtml = "";
+    if (c.sections.length > 1) {
+      const pills = c.sections.map(s => `
+        <button data-sid="${s.id}" class="${picked===s.id?'active':''}">
+          <span class="sec-label">${s.label}</span>
+          <span class="sec-time">${meetingsSummary(s.meetings)}</span>
+        </button>`).join("");
+      sectionHtml = `
+        <div class="section-toggle">
+          <div class="sec-row">
+            ${pills}
+          </div>
+          <div class="sec-hint">Pick one section · hover to preview on calendar</div>
+        </div>`;
+    } else {
+      sectionHtml = `<div class="meta" style="margin-top:6px;">${c.sections[0].label} · ${meetingsSummary(c.sections[0].meetings)}</div>`;
+    }
+
+    const delBtn = c.custom ? `<button class="del" data-del title="Remove this course">×</button>` : "";
+    const handle = `<span class="drag-handle" data-drag-handle title="Drag to reorder">⋮⋮</span>`;
+    div.innerHTML = handle + row1 + delBtn + sectionHtml;
+    el.appendChild(div);
+
+    /* minimize / expand this card */
+    const minEl = div.querySelector("[data-min]");
+    if (minEl) {
+      minEl.addEventListener("click", e => {
+        e.stopPropagation();
+        if (collapsed.has(c.id)) collapsed.delete(c.id);
+        else collapsed.add(c.id);
+        saveCollapsed();
+        renderCourseList();
+      });
+    }
+
+    /* hide this card — data stays in COURSES, card moves to restore panel */
+    const hideEl = div.querySelector("[data-hide]");
+    if (hideEl) {
+      hideEl.addEventListener("click", e => {
+        e.stopPropagation();
+        hidden.add(c.id);
+        if (selection[c.id]) selection[c.id] = null;  /* also drop it from the calendar */
+        saveHidden();
+        document.getElementById("combosOut").innerHTML = "";
+        rerender();
+      });
+    }
+
+    const delEl = div.querySelector("[data-del]");
+    if (delEl) {
+      delEl.addEventListener("click", e => {
+        e.stopPropagation();
+        if (!confirm(`Remove ${c.code} from the builder?`)) return;
+        const idx = COURSES.findIndex(x => x.id === c.id);
+        if (idx >= 0) COURSES.splice(idx, 1);
+        delete selection[c.id];
+        saveCustom(COURSES.filter(x => x.custom));
+        document.getElementById("combosOut").innerHTML = "";
+        rerender();
+      });
+    }
+
+    /* toggle whole course on click */
+    div.addEventListener("click", e => {
+      if (e.target.closest(".section-toggle")) return;
+      if (selection[c.id]) selection[c.id] = null;
+      else selection[c.id] = c.sections[0].id;
+      rerender();
+    });
+
+    /* section buttons */
+    div.querySelectorAll(".section-toggle button[data-sid]").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        selection[c.id] = btn.dataset.sid;
+        rerender();
+      });
+      btn.addEventListener("mouseenter", () => showGhost(c.id, btn.dataset.sid));
+      btn.addEventListener("mouseleave", clearGhost);
+    });
+
+    /* drag-to-reorder: only from the handle */
+    const handleEl = div.querySelector("[data-drag-handle]");
+    if (handleEl) {
+      handleEl.addEventListener("mousedown", () => { div.draggable = true; });
+      handleEl.addEventListener("mouseup",   () => { div.draggable = false; });
+      handleEl.addEventListener("click", e => e.stopPropagation());
+    }
+    div.addEventListener("dragstart", e => {
+      dragCid = c.id;
+      div.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+      try { e.dataTransfer.setData("text/plain", c.id); } catch {}
+    });
+    div.addEventListener("dragend", () => {
+      dragCid = null;
+      div.classList.remove("dragging");
+      div.draggable = false;
+      document.querySelectorAll(".course.drop-before, .course.drop-after")
+        .forEach(n => n.classList.remove("drop-before","drop-after"));
+    });
+    div.addEventListener("dragover", e => {
+      if (!dragCid || dragCid === c.id) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const r = div.getBoundingClientRect();
+      const before = (e.clientY - r.top) < r.height / 2;
+      div.classList.toggle("drop-before", before);
+      div.classList.toggle("drop-after", !before);
+    });
+    div.addEventListener("dragleave", () => {
+      div.classList.remove("drop-before", "drop-after");
+    });
+    div.addEventListener("drop", e => {
+      if (!dragCid || dragCid === c.id) return;
+      e.preventDefault();
+      const r = div.getBoundingClientRect();
+      const before = (e.clientY - r.top) < r.height / 2;
+      const fromIdx = COURSES.findIndex(x => x.id === dragCid);
+      if (fromIdx < 0) return;
+      const [moved] = COURSES.splice(fromIdx, 1);
+      let toIdx = COURSES.findIndex(x => x.id === c.id);
+      if (!before) toIdx += 1;
+      COURSES.splice(toIdx, 0, moved);
+      saveOrder();
+      div.classList.remove("drop-before", "drop-after");
+      rerender();
+    });
+
+  }
+
+  /* ─── Hidden-courses restore panel ─── */
+  const hiddenCourses = COURSES.filter(c => hidden.has(c.id));
+  if (hiddenCourses.length === 0) return;
+  const wasOpen = document.querySelector(".hidden-panel")?.open ?? false;
+  const panel = document.createElement("details");
+  panel.className = "hidden-panel";
+  if (wasOpen) panel.open = true;
+  const pillsHtml = hiddenCourses.map(c => `
+    <div class="hidden-pill" data-restore-cid="${c.id}" title="Restore ${c.code} to the visible list">
+      <span class="swatch" style="background:${c.color}"></span>
+      <span class="code">${c.code}</span>
+      <span class="title">${c.title}</span>
+      <span class="restore">+</span>
+    </div>
+  `).join("");
+  panel.innerHTML = `
+    <summary>
+      Hidden courses
+      <span class="count-pill">${hiddenCourses.length}</span>
+    </summary>
+    <div class="hint">Data stays in the background — click to restore.</div>
+    <div class="hidden-list">${pillsHtml}</div>
+  `;
+  el.appendChild(panel);
+  panel.querySelectorAll("[data-restore-cid]").forEach(pill => {
+    pill.addEventListener("click", e => {
+      e.stopPropagation();
+      const cid = pill.dataset.restoreCid;
+      hidden.delete(cid);
+      saveHidden();
+      document.getElementById("combosOut").innerHTML = "";
+      rerender();
+    });
+  });
+}
+let dragCid = null;
+
+/* ─── Ghost preview (hover section pill to see where it would land) ─── */
+function showGhost(cid, sid) {
+  clearGhost();
+  const course = COURSES.find(c => c.id === cid);
+  const sec = course.sections.find(s => s.id === sid);
+  for (const m of sec.meetings) {
+    const col = document.querySelector(`.col[data-day="${m.d}"]`);
+    if (!col) continue;
+    const sMin = toMin(m.s), eMin = toMin(m.e);
+    const top = pct(sMin);
+    const el = document.createElement("div");
+    el.className = "block ghost";
+    el.dataset.ghost = "1";
+    el.style.top = top + "px";
+    el.style.height = (pct(eMin) - top - 2) + "px";
+    el.style.borderColor = course.color;
+    el.innerHTML = `
+      <div class="bcode" style="color:${course.color}">${course.code.replace(/-UH /,' ')}</div>
+      <div class="btime" style="color:${course.color}">${m.s}–${m.e} preview</div>
+    `;
+    col.appendChild(el);
+  }
+}
+function clearGhost() {
+  document.querySelectorAll(".block.ghost").forEach(el => el.remove());
+}
+
+function meetingsSummary(meetings) {
+  /* group by unique time, show like "MW 08:30–09:45, TR 08:30–09:45" */
+  const byTime = {};
+  for (const m of meetings) {
+    const k = `${m.s}-${m.e}`;
+    (byTime[k] ||= []).push(m.d);
+  }
+  return Object.entries(byTime).map(([k,ds]) => {
+    const [s,e] = k.split("-");
+    return `${ds.join("")} ${s}–${e}`;
+  }).join(", ");
+}
+
+/* ─── Render hour grid lines + labels ─── */
+function renderGridChrome() {
+  const labels = document.getElementById("hourLabels");
+  labels.innerHTML = "";
+  document.querySelectorAll(".col .hourlines").forEach(el => el.remove());
+
+  for (let m = DAY_START; m <= DAY_END; m += 60) {
+    const y = pct(m);
+    const lab = document.createElement("div");
+    lab.textContent = fmt(m);
+    lab.style.top = y + "px";
+    labels.appendChild(lab);
+  }
+  document.querySelectorAll(".col").forEach(col => {
+    const hl = document.createElement("div");
+    hl.className = "hourlines";
+    for (let m = DAY_START + 60; m < DAY_END; m += 60) {
+      const line = document.createElement("div");
+      line.className = "hourline";
+      line.style.top = (pct(m) - HEAD_PX) + "px";
+      hl.appendChild(line);
+    }
+    col.appendChild(hl);
+  });
+}
+
+/* ─── Compute blocks for current selection ─── */
+function activeBlocks() {
+  const out = [];
+  for (const c of COURSES) {
+    const sid = selection[c.id];
+    if (!sid) continue;
+    const sec = c.sections.find(s => s.id === sid);
+    for (const m of sec.meetings) {
+      out.push({
+        cid:c.id, code:c.code, color:c.color, instr:c.instructor,
+        sectionLabel: sec.label,
+        day:m.d, sMin:toMin(m.s), eMin:toMin(m.e),
+        tag: m.tag || null,
+      });
+    }
+  }
+  return out;
+}
+
+function findConflicts(blocks) {
+  /* returns Set of block indices that conflict with another */
+  const conflicts = new Set();
+  for (let i = 0; i < blocks.length; i++) {
+    for (let j = i+1; j < blocks.length; j++) {
+      const a = blocks[i], b = blocks[j];
+      if (a.day !== b.day) continue;
+      if (a.cid === b.cid) continue; // same course's own meetings
+      if (a.sMin < b.eMin && b.sMin < a.eMin) {
+        conflicts.add(i); conflicts.add(j);
+      }
+    }
+  }
+  return conflicts;
+}
+
+/* ─── Render blocks onto grid ─── */
+function renderBlocks() {
+  document.querySelectorAll(".col .block").forEach(el => el.remove());
+  const blocks = activeBlocks();
+  const conflicts = findConflicts(blocks);
+
+  blocks.forEach((b, i) => {
+    const col = document.querySelector(`.col[data-day="${b.day}"]`);
+    const top = pct(b.sMin);
+    const height = pct(b.eMin) - top;
+    const el = document.createElement("div");
+    el.className = "block" + (conflicts.has(i) ? " conflict" : "");
+    el.style.top = top + "px";
+    el.style.height = (height - 2) + "px";
+    el.style.background = b.color;
+    el.innerHTML = `
+      <div class="bcode">${b.code.replace(/-UH /,' ')}${b.tag?' (lab)':''}</div>
+      <div class="btime">${fmt(b.sMin)}–${fmt(b.eMin)}</div>
+      <div class="binstr">${b.instr}</div>
+    `;
+    el.title = `${b.code} ${b.sectionLabel}\n${b.day} ${fmt(b.sMin)}–${fmt(b.eMin)}\n${b.instr}`;
+    col.appendChild(el);
+  });
+
+  return { blocks, conflicts };
+}
+
+/* ─── Stats & banner ─── */
+function renderStats({ blocks, conflicts }) {
+  const nSel = Object.values(selection).filter(Boolean).length;
+  document.getElementById("stSel").textContent = `${nSel} / 4`;
+  const totalMin = blocks.reduce((a,b)=>a+(b.eMin-b.sMin), 0);
+  document.getElementById("stHrs").textContent = (totalMin/60).toFixed(1) + " h";
+
+  const nConfPairs = conflicts.size / 2;
+  const cel = document.getElementById("stConf");
+  cel.textContent = nConfPairs;
+  cel.className = "v " + (nConfPairs === 0 ? "ok" : "err");
+
+  if (blocks.length) {
+    const e = Math.min(...blocks.map(b=>b.sMin));
+    const l = Math.max(...blocks.map(b=>b.eMin));
+    document.getElementById("stEarly").textContent = fmt(e);
+    document.getElementById("stLate").textContent  = fmt(l);
+  } else {
+    document.getElementById("stEarly").textContent = "—";
+    document.getElementById("stLate").textContent = "—";
+  }
+
+  const banner = document.getElementById("banner");
+  if (nConfPairs) {
+    const pairs = [];
+    const seen = new Set();
+    const bArr = blocks;
+    for (let i = 0; i < bArr.length; i++) {
+      for (let j = i+1; j < bArr.length; j++) {
+        const a = bArr[i], b = bArr[j];
+        if (a.day === b.day && a.cid !== b.cid && a.sMin < b.eMin && b.sMin < a.eMin) {
+          const key = [a.cid,b.cid].sort().join("|");
+          if (seen.has(key)) continue;
+          seen.add(key);
+          pairs.push(`${a.code} ⟷ ${b.code} on ${dayName(a.day)} (${fmt(Math.max(a.sMin,b.sMin))}–${fmt(Math.min(a.eMin,b.eMin))})`);
+        }
+      }
+    }
+    banner.innerHTML = `<strong>⚠ ${nConfPairs} time conflict${nConfPairs>1?'s':''}:</strong> ` + pairs.join(" · ");
+    banner.classList.add("show");
+  } else {
+    banner.classList.remove("show");
+  }
+
+  document.querySelectorAll(".course").forEach(el => el.classList.remove("conflicting"));
+  blocks.forEach((b, i) => {
+    if (conflicts.has(i)) {
+      const el = document.querySelector(`.course[data-cid="${b.cid}"]`);
+      if (el) el.classList.add("conflicting");
+    }
+  });
+}
+
+function dayName(d) {
+  return { M:"Mon", T:"Tue", W:"Wed", R:"Thu", F:"Fri" }[d];
+}
+
+/* ─── Combo explorer ─── */
+function findCombos(k = 4) {
+  /* enumerate all ways to choose k courses from COURSES (each course picks its 1st section
+     unless it has alternatives — then try each). */
+  const choices = COURSES.filter(c => !hidden.has(c.id)).map(c =>
+    [{skip:true, cid:c.id}, ...c.sections.map(s=>({skip:false, cid:c.id, sid:s.id}))]
+  );
+  const results = [];
+  function recurse(idx, pick) {
+    if (idx === choices.length) {
+      const chosen = pick.filter(p => !p.skip);
+      if (chosen.length !== k) return;
+      const fake = {};
+      chosen.forEach(p => fake[p.cid] = p.sid);
+      /* build blocks */
+      const blocks = [];
+      for (const p of chosen) {
+        const c = COURSES.find(cc => cc.id === p.cid);
+        const sec = c.sections.find(s => s.id === p.sid);
+        for (const m of sec.meetings) {
+          blocks.push({ cid:c.id, code:c.code, day:m.d, sMin:toMin(m.s), eMin:toMin(m.e) });
+        }
+      }
+      /* conflicts */
+      const conflictPairs = [];
+      for (let i = 0; i < blocks.length; i++)
+        for (let j = i+1; j < blocks.length; j++) {
+          const a = blocks[i], b = blocks[j];
+          if (a.day === b.day && a.cid !== b.cid && a.sMin < b.eMin && b.sMin < a.eMin)
+            conflictPairs.push(`${a.code.split(" ")[0]}⟷${b.code.split(" ")[0]}`);
+        }
+      const blockedCourses = chosen
+        .map(p => COURSES.find(cc => cc.id === p.cid))
+        .filter(c => !checkPrereq(c).ok)
+        .map(c => c.code.split(" ").slice(0,2).join(" "));
+      results.push({
+        picks: chosen, fake,
+        valid: conflictPairs.length === 0 && blockedCourses.length === 0,
+        conflicts: [...new Set(conflictPairs)],
+        blocked: blockedCourses,
+        earliest: blocks.length ? Math.min(...blocks.map(b=>b.sMin)) : null,
+        latest:   blocks.length ? Math.max(...blocks.map(b=>b.eMin)) : null,
+      });
+      return;
+    }
+    for (const opt of choices[idx]) recurse(idx+1, [...pick, opt]);
+  }
+  recurse(0, []);
+  /* dedupe: a combo picking "skip" for a course is the same regardless of section id,
+     but since skip has no sid it's already the same obj. Valid combos with different sections
+     are distinct — good. */
+  /* sort: valid first, then earliest start */
+  results.sort((a,b) => (b.valid - a.valid) || ((a.earliest||9999) - (b.earliest||9999)));
+  return results;
+}
+
+/* Read filter dropdown state → object mapping tag → rule */
+function readComboFilters() {
+  const rules = {};
+  document.querySelectorAll(".combo-filters select[data-filter]").forEach(sel => {
+    if (sel.value !== "any") rules[sel.dataset.filter] = sel.value;
+  });
+  return rules;
+}
+
+/* Count how many courses in a combo match a given tag (or tag group "core") */
+function countComboTag(combo, tagKey) {
+  const isGroup = tagKey === "core";
+  return combo.picks.filter(p => {
+    const c = COURSES.find(cc => cc.id === p.cid);
+    if (!c || !c.tags) return false;
+    if (isGroup) return c.tags.some(t => t.startsWith("core-"));
+    return c.tags.includes(tagKey);
+  }).length;
+}
+
+/* Return true if combo satisfies all active filter rules */
+function passesComboFilters(combo, rules) {
+  for (const [tagKey, rule] of Object.entries(rules)) {
+    const n = countComboTag(combo, tagKey);
+    switch (rule) {
+      case "required":  if (n < 1) return false; break;
+      case "excluded":  if (n > 0) return false; break;
+      case "exactly1":  if (n !== 1) return false; break;
+      case "atmost1":   if (n > 1) return false; break;
+      case "atmost2":   if (n > 2) return false; break;
+      case "atleast1":  if (n < 1) return false; break;
+      case "atleast2":  if (n < 2) return false; break;
+    }
+  }
+  return true;
+}
+
+/* Update the badge showing active filter count */
+function refreshFilterBadge() {
+  const count = Object.keys(readComboFilters()).length;
+  const badge = document.getElementById("filterBadge");
+  badge.textContent = count;
+  badge.style.display = count ? "inline-block" : "none";
+  document.querySelectorAll(".combo-filters select[data-filter]").forEach(sel => {
+    sel.classList.toggle("non-default", sel.value !== "any");
+  });
+}
+
+function renderCombos() {
+  const out = document.getElementById("combosOut");
+  out.innerHTML = "";
+  const rules = readComboFilters();
+  /* Only valid (conflict-free + prereq-met) combos that pass filters */
+  const combos = findCombos(4).filter(c => c.valid && passesComboFilters(c, rules));
+
+  const header = document.createElement("div");
+  header.style.cssText = "font-size:11.5px;color:var(--ink-dim);margin:6px 0;";
+  const ruleCount = Object.keys(rules).length;
+  if (!combos.length) {
+    header.textContent = ruleCount
+      ? `No combos match your ${ruleCount} filter${ruleCount>1?'s':''}. Relax a rule or clear filters.`
+      : "No conflict-free 4-course combos available.";
+    header.style.color = "var(--warn)";
+    out.appendChild(header);
+    return;
+  }
+  header.textContent = ruleCount
+    ? `${combos.length} combo${combos.length>1?'s':''} match your filters · click to load`
+    : `${combos.length} conflict-free combo${combos.length>1?'s':''} · click to load`;
+  out.appendChild(header);
+
+  for (const c of combos) {
+    const div = document.createElement("div");
+    div.className = "combo valid";
+    const codes = c.picks.map(p => {
+      const course = COURSES.find(cc => cc.id === p.cid);
+      const sec = course.sections.find(s => s.id === p.sid);
+      const shortCode = course.code.split(" ").slice(0,2).join(" ");
+      if (course.sections.length > 1) {
+        const marker = sec.label.match(/§\d+/)?.[0] || sec.label.split(" ")[0];
+        return `<span style="color:${course.color}">${shortCode} ${marker}</span>`;
+      }
+      return `<span style="color:${course.color}">${shortCode}</span>`;
+    }).join(" · ");
+    div.innerHTML = `<div class="codes">${codes}</div>
+                     <div class="days">${fmt(c.earliest)}–${fmt(c.latest)} window</div>`;
+    div.addEventListener("click", () => {
+      for (const cid of Object.keys(selection)) selection[cid] = null;
+      for (const p of c.picks) selection[p.cid] = p.sid;
+      rerender();
+    });
+    out.appendChild(div);
+  }
+}
+
+/* ─── Requirement coverage (full SRPP BA + Core + Gen Ed) ─── */
+function renderCoverage() {
+  const el = document.getElementById("coverage");
+  el.innerHTML = "";
+  const selected = COURSES.filter(c => selection[c.id]);
+
+  let lastGroup = null;
+  for (const req of REQUIREMENTS) {
+    if (req.group !== lastGroup) {
+      const head = document.createElement("div");
+      head.className = "group-head";
+      head.textContent = req.group;
+      el.appendChild(head);
+      lastGroup = req.group;
+    }
+    const hits = selected.filter(c => (c.tags || []).includes(req.tag));
+    const prior = PRIOR_SATISFIED[req.tag] || [];
+    const n = hits.length + prior.length;
+    const state = n === 0 ? "off" : (n >= req.need ? "on" : "partial");
+    const countCls = state === "on" ? "done" : (state === "partial" ? "partial" : "");
+    const countLabel = req.need > 1 ? `${n}/${req.need}` : (n > 0 ? "✓" : "—");
+
+    const parts = [];
+    for (const p of prior) parts.push(`<em style="color:#6ee7b7">${p.code.replace("-UH "," ")} (${p.when})</em>`);
+    for (const h of hits) parts.push(h.code.replace("-UH "," "));
+    const sourceHtml = parts.length ? parts.join(", ") : "none this semester";
+
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `
+      <div class="req">
+        <span class="dot ${state}"></span>
+        <span>${req.label}</span>
+      </div>
+      <span class="count ${countCls}">${countLabel}</span>
+      <div class="source ${n?'':'missing'}" title="${sourceHtml.replace(/<[^>]+>/g,'')}">${sourceHtml}</div>
+    `;
+    el.appendChild(row);
+  }
+}
+
+/* ─── Main render ─── */
+function rerender() {
+  renderCourseList();
+  const info = renderBlocks();
+  renderStats(info);
+  renderCoverage();
+}
+
+document.getElementById("btnCombos").addEventListener("click", renderCombos);
+
+/* Filter dropdowns: update badge; re-run combos if results are already visible */
+document.querySelectorAll(".combo-filters select[data-filter]").forEach(sel => {
+  sel.addEventListener("change", () => {
+    refreshFilterBadge();
+    if (document.getElementById("combosOut").children.length > 0) renderCombos();
+  });
+});
+refreshFilterBadge();
+document.getElementById("btnClear").addEventListener("click", () => {
+  for (const cid of Object.keys(selection)) selection[cid] = null;
+  document.getElementById("combosOut").innerHTML = "";
+  rerender();
+});
+document.getElementById("btnCollapseAll").addEventListener("click", () => {
+  collapsed.clear();
+  for (const c of COURSES) collapsed.add(c.id);
+  saveCollapsed();
+  renderCourseList();
+});
+document.getElementById("btnExpandAll").addEventListener("click", () => {
+  collapsed.clear();
+  saveCollapsed();
+  renderCourseList();
+});
+
+/* ─── Parser for the add-course modal ───
+   Accepts blocks like:
+     Code: ...
+     Title: ...
+     Instructor: ...
+     Color: #hex  (optional)
+     Section: §001 · #xxxxx
+     MW 11:20-12:35
+     F 09:20-10:35
+*/
+const DAY_SET = new Set(["M","T","W","R","F"]);
+function parseCourseText(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim());
+  const c = { id:"", code:"", title:"", instructor:"", color:"", tags:[], sections:[], custom:true };
+  let cur = null;
+  for (const line of lines) {
+    if (!line) continue;
+    const m = line.match(/^([A-Za-z]+)\s*[:：]\s*(.+)$/);
+    if (m) {
+      const key = m[1].toLowerCase();
+      const val = m[2].trim();
+      if (key === "code")       c.code = val;
+      else if (key === "title") c.title = val;
+      else if (key === "instructor") c.instructor = val;
+      else if (key === "color") c.color = val;
+      else if (key === "tags")  c.tags = val.split(/[,\s]+/).filter(Boolean);
+      else if (key === "section") {
+        cur = { id:"", label: val, meetings: [] };
+        c.sections.push(cur);
+      }
+      continue;
+    }
+    /* Meeting line: "MW 11:20-12:35" or "TR 11:20-12:35 lab" */
+    const mm = line.match(/^([MTWRF]+)\s+(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\s*(.*)$/i);
+    if (mm) {
+      if (!cur) throw new Error(`Meeting line "${line}" appears before any Section: header`);
+      const days = mm[1].toUpperCase().split("");
+      for (const d of days) {
+        if (!DAY_SET.has(d)) throw new Error(`Bad day code "${d}" in "${line}"`);
+      }
+      const s = mm[2].padStart(5,"0"), e = mm[3].padStart(5,"0");
+      const tag = mm[4].trim().toLowerCase() || null;
+      for (const d of days) cur.meetings.push({ d, s, e, ...(tag ? {tag} : {}) });
+      continue;
+    }
+    throw new Error(`Unrecognized line: "${line}"`);
+  }
+  if (!c.code) throw new Error("Missing Code: line");
+  if (!c.sections.length) throw new Error("Add at least one Section: block");
+  for (const s of c.sections)
+    if (!s.meetings.length) throw new Error(`Section "${s.label}" has no meeting times`);
+
+  /* Build unique id from code; append -2,-3 if collision */
+  const base = c.code.replace(/[^A-Za-z0-9]/g,"").toUpperCase().slice(0,12) || "C";
+  let id = base; let n = 2;
+  while (COURSES.some(x => x.id === id)) id = `${base}${n++}`;
+  c.id = id;
+  c.sections.forEach((s,i) => s.id = `${id}-${String(i+1).padStart(3,"0")}`);
+
+  /* Assign an unused color */
+  if (!c.color) {
+    const used = new Set(COURSES.map(x => x.color));
+    for (let i = 1; i <= 10; i++) {
+      const v = `var(--c${i})`;
+      if (!used.has(v)) { c.color = v; break; }
+    }
+    if (!c.color) c.color = "var(--c1)";
+  }
+
+  if (!c.title) c.title = "";
+  if (!c.instructor) c.instructor = "—";
+  return c;
+}
+
+/* ─── Modal wiring ─── */
+const modal = document.getElementById("modal");
+const modalInput = document.getElementById("modalInput");
+const modalErr = document.getElementById("modalErr");
+
+const TEMPLATE = `Code:
+Title:
+Instructor:
+
+Section: §001 · #
+`;
+
+document.getElementById("btnAdd").addEventListener("click", () => {
+  modalErr.textContent = "";
+  modalInput.value = TEMPLATE;
+  modal.classList.add("show");
+  setTimeout(() => modalInput.focus(), 50);
+});
+document.getElementById("modalCancel").addEventListener("click", () => modal.classList.remove("show"));
+modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("show"); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") modal.classList.remove("show");
+});
+
+document.getElementById("modalSave").addEventListener("click", () => {
+  try {
+    const c = parseCourseText(modalInput.value);
+    COURSES.push(c);
+    selection[c.id] = c.sections[0].id;  /* enable newly added course */
+    saveCustom(COURSES.filter(x => x.custom));
+    modal.classList.remove("show");
+    document.getElementById("combosOut").innerHTML = "";
+    rerender();
+  } catch (err) {
+    modalErr.textContent = err.message;
+  }
+});
+
+/* ─── LLM helper: build a prompt around user-pasted raw text ─── */
+/* Using Zhipu GLM (智谱) — glm-4-flash is their free/lightest model,
+   plenty for a format-conversion task. */
+const AI_KEY_LS = "nyuad-fall26-glm-key";
+const GLM_MODEL = "glm-4-flash";
+const GLM_URL   = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+
+function refreshKeyStatus() {
+  const k = localStorage.getItem(AI_KEY_LS);
+  const statusEl = document.getElementById("apiKeyStatus");
+  const clearLink = document.getElementById("clearApiKey");
+  if (k) {
+    statusEl.textContent = `GLM key saved (…${k.slice(-4)}).`;
+    statusEl.style.color = "var(--ok)";
+    clearLink.style.display = "inline";
+  } else {
+    statusEl.textContent = "No GLM key saved.";
+    statusEl.style.color = "var(--ink-dim)";
+    clearLink.style.display = "none";
+  }
+}
+refreshKeyStatus();
+
+document.getElementById("setApiKey").addEventListener("click", e => {
+  e.preventDefault();
+  const existing = localStorage.getItem(AI_KEY_LS) || "";
+  const k = prompt(
+    "Paste your Zhipu GLM API key.\n\n" +
+    "Stored only in this browser's localStorage and sent directly to open.bigmodel.cn — never to any other server.\n\n" +
+    "Get / manage keys: https://bigmodel.cn/usercenter/apikeys",
+    existing
+  );
+  if (k === null) return;
+  const trimmed = k.trim();
+  if (!trimmed) return;
+  localStorage.setItem(AI_KEY_LS, trimmed);
+  refreshKeyStatus();
+});
+
+document.getElementById("clearApiKey").addEventListener("click", e => {
+  e.preventDefault();
+  localStorage.removeItem(AI_KEY_LS);
+  refreshKeyStatus();
+});
+
+function buildLlmPrompt(raw) {
+  return `You are converting messy course information into a strict plain-text block format my schedule builder can parse. Output ONLY the formatted block — no code fences, no commentary, no preamble.
+
+FORMAT RULES
+- Required lines at top: "Code: <code>", "Title: <title>", "Instructor: <name>".
+- Optional: "Tags: <space-or-comma-separated tags from this set: speh spet methods ipp ssgp sc core-di core-ei core-qr core-is core-adt core-cea core-sts lang>". Omit the line if you can't infer tags.
+- Then one or more Section blocks. Each begins with "Section: <label>" (e.g. "Section: §001") followed by one meeting per line.
+- Meeting lines: "<DAYS> <HH:MM>-<HH:MM>" in 24-hour time. Day codes: M=Mon, T=Tue, W=Wed, R=Thu, F=Fri. Combine like MW or TR.
+- Blank line between sections. No other lines, no bullets, no numbering.
+- If a section has a lab/recitation with a different time, just add another meeting line under the same Section block.
+- Multiple sections that meet at different times become separate Section blocks (mutually exclusive alternatives).
+
+EXAMPLE OUTPUT
+Code: CS-UH 1050
+Title: Data Structures
+Instructor: Azza Abouzied
+Tags: core-qr
+
+Section: §001
+MW 11:20-12:35
+F 09:20-10:35
+
+Section: §002
+TR 14:30-15:45
+
+RAW INPUT TO CONVERT:
+\`\`\`
+${raw}
+\`\`\`
+
+Output the formatted block now.`;
+}
+
+/* ─── Direct API call to Zhipu GLM (glm-4-flash) ─── */
+document.getElementById("formatWithAI").addEventListener("click", async () => {
+  const raw = document.getElementById("rawInput").value.trim();
+  const status = document.getElementById("copyStatus");
+  const btn = document.getElementById("formatWithAI");
+  if (!raw) {
+    status.style.color = "var(--err)";
+    status.textContent = "Paste some raw text first.";
+    return;
+  }
+  let key = localStorage.getItem(AI_KEY_LS);
+  if (!key) {
+    document.getElementById("setApiKey").click();
+    key = localStorage.getItem(AI_KEY_LS);
+    if (!key) return;
+  }
+
+  btn.disabled = true;
+  const origText = btn.textContent;
+  btn.textContent = "⏳ Formatting…";
+  status.style.color = "var(--ink-dim)";
+  status.textContent = `Calling ${GLM_MODEL}…`;
+
+  try {
+    const resp = await fetch(GLM_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + key,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: GLM_MODEL,
+        max_tokens: 1024,
+        temperature: 0.1,
+        messages: [{ role: "user", content: buildLlmPrompt(raw) }],
+      }),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`API ${resp.status}: ${errText.slice(0, 300)}`);
+    }
+    const data = await resp.json();
+    const text = (data.choices?.[0]?.message?.content || "").trim();
+    if (!text) throw new Error("Empty response from API");
+    /* Strip accidental code fences the model may add */
+    const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/,"").trim();
+    modalInput.value = cleaned;
+    status.style.color = "var(--ok)";
+    status.textContent = "✓ Filled the textarea above. Review, then click Add course.";
+    document.getElementById("llmHelper").open = false;
+  } catch (err) {
+    status.style.color = "var(--err)";
+    const msg = err.message.includes("Failed to fetch")
+      ? "Network/CORS blocked. GLM may reject browser-origin calls — use 📋 Copy prompt fallback instead."
+      : "Error: " + err.message;
+    status.textContent = msg;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+});
+
+document.getElementById("copyLlmPrompt").addEventListener("click", async () => {
+  const raw = document.getElementById("rawInput").value.trim();
+  const status = document.getElementById("copyStatus");
+  if (!raw) {
+    status.style.color = "var(--err)";
+    status.textContent = "Paste some raw text first.";
+    return;
+  }
+  const prompt =
+`You are converting messy course information into a strict plain-text block format my schedule builder can parse. Output ONLY the formatted block — no code fences, no commentary, no preamble.
+
+FORMAT RULES
+- Required lines at top: "Code: <code>", "Title: <title>", "Instructor: <name>".
+- Optional: "Tags: <space-or-comma-separated tags from this set: speh spet methods ipp ssgp sc core-di core-ei core-qr core-is core-adt core-cea core-sts lang>". Omit the line if you can't infer tags.
+- Then one or more Section blocks. Each begins with "Section: <label>" (e.g. "Section: §001") followed by one meeting per line.
+- Meeting lines: "<DAYS> <HH:MM>-<HH:MM>" in 24-hour time. Day codes: M=Mon, T=Tue, W=Wed, R=Thu, F=Fri. Combine like MW or TR.
+- Blank line between sections. No other lines, no bullets, no numbering.
+- If a section has a lab/recitation with a different time, just add another meeting line under the same Section block.
+- Multiple sections that meet at different times become separate Section blocks (they are mutually exclusive alternatives).
+
+EXAMPLE OUTPUT
+Code: CS-UH 1050
+Title: Data Structures
+Instructor: Azza Abouzied
+Tags: core-qr
+
+Section: §001
+MW 11:20-12:35
+F 09:20-10:35
+
+Section: §002
+TR 14:30-15:45
+
+RAW INPUT TO CONVERT:
+\`\`\`
+${raw}
+\`\`\`
+
+Output the formatted block now.`;
+
+  try {
+    await navigator.clipboard.writeText(prompt);
+    status.style.color = "var(--ok)";
+    status.textContent = "✓ Copied — paste into any LLM, then paste the response into the textarea above.";
+  } catch {
+    status.style.color = "var(--err)";
+    status.textContent = "Clipboard blocked — select all in the textarea and copy manually.";
+  }
+});
+
+/* init */
+renderGridChrome();
+
+
+/* Dynamic legend */
+(function renderLegend() {
+  const el = document.getElementById("legend");
+  if (!el) return;
+  const parts = COURSES.map(c =>
+    `<span><i style="background:${c.color}"></i>${c.code.replace("-UH "," ")}</span>`
+  );
+  parts.push(`<span><i style="background:var(--err)"></i>Conflict / blocked</span>`);
+  el.innerHTML = parts.join("");
+})();
+
+rerender();
+</script>
+
+</body>
+</html>

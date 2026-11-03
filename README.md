@@ -1,263 +1,42 @@
-# Smart Schedule Synth - NYUAD Fall 2025
+# Smart Schedule Synth
 
-An intelligent web application for NYUAD students to browse courses, generate conflict-free semester schedules, and get AI-powered recommendations for optimal course selection.
+**A course-schedule builder for NYU Abu Dhabi that puts sections, prerequisites, and degree requirements on one screen.**
 
-Short Demo Link: https://drive.google.com/file/d/1ufVJaDh32309V6IMJzWti7RtJW1-7Tg1/view?usp=sharing
+**▶ Live demo: https://hawever-renbo.github.io/smart-schedule-synth/** (single HTML file, no install, no login)
 
-## 🚀 Features
+![Demo: a section switch creates a conflict, the combo explorer finds conflict-free plans that fit the degree, and the requirement tracker updates](docs/img/demo.gif)
 
-### 📚 **Comprehensive Course Browser**
-- **31+ Real Courses**: Complete NYUAD Fall 2025 course catalog
-- **Advanced Search**: Search by title, course ID, description, or tags
-- **Smart Filtering**: Filter by subject area, credits, and requirements
-- **Visual Requirements**: Color-coded tags for Core, Major, and General Education requirements
+## Why I built it
 
-### 🤖 **AI-Powered Schedule Generation**
-- **Conflict Detection**: Automatically identifies scheduling conflicts
-- **Smart Analysis**: LLM-powered conflict analysis with intelligent recommendations
-- **Alternative Suggestions**: AI suggests similar courses at different times
-- **One-Click Resolution**: Add suggested alternatives directly to your schedule
+Picking classes at NYUAD means juggling three systems that don't talk to each other:
 
-### 🎯 **Academic Planning Tools**
-- **Requirement Tracking**: Visual indicators for Core, Major, and GE requirements
-- **Credit Calculation**: Automatic credit hour tracking
-- **Schedule Visualization**: Clean weekly schedule display
-- **Conflict Resolution**: Intelligent suggestions for resolving scheduling conflicts
+| What you need | Where it lives |
+|---|---|
+| Sections, meeting times, open seats | **Albert** (NYU's registration system, behind SSO) |
+| Course descriptions, prerequisites, syllabi | **Student Portal** course list |
+| Which courses count toward your major and the Core | **Bulletin / major brochure** |
 
-### 🎨 **Modern User Interface**
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Interactive Course Cards**: Hover effects and smooth transitions
-- **Real-time Updates**: Instant filtering and search results
-- **Accessibility**: Clear visual hierarchy and intuitive navigation
+So every "can I take X?" question becomes three tabs, a spreadsheet, and a hand-drawn week grid. This tool merges all three into one view and answers the questions directly: does this clash, am I allowed to take it, and what does it move forward in my degree?
 
-## 🛠️ Technical Stack
+## v1 → v2
 
-- **Backend**: Python Flask with RESTful API
-- **Frontend**: Vanilla JavaScript with Tailwind CSS
-- **Data**: 31 comprehensive NYUAD courses with detailed information
-- **AI Integration**: Smart conflict analysis and course recommendations
-- **Port**: 5001 (configurable)
+- **v1 (Oct 2025, NYUAD hackathon):** a Flask app with 31 Fall 2025 courses, conflict detection, and LLM-suggested alternative sections. Code kept as-is in [`v1-hackathon/`](v1-hackathon/).
+- **v2 (Apr 2026, my own follow-up):** I kept building on the idea after the hackathon and used it for my real Fall 2026 registration. v2 is a single self-contained page ([`docs/index.html`](docs/index.html)) built around one student's actual degree:
+  - **Week grid with live conflict detection.** Hover a section to preview it on the calendar before committing.
+  - **Prerequisite checker** against the student's completed courses, which flags anything you can't self-enroll in.
+  - **Requirement-coverage tracker** for the full SRPP BA, Common Core, and Gen Ed: what's already done, what this semester adds, and what's still open.
+  - **Combo explorer**, which enumerates every 4-course plan and keeps the ones that are conflict-free and prereq-clean, with degree-aware filters (e.g. "must include Arabic", "exactly one SPEH", "at least one Methods").
+  - **Paste-to-add:** paste a course's raw text from Albert, and a small parser (optionally assisted by an LLM) turns it into a card. API keys stay in your browser's localStorage.
+  - Collapse, hide, and drag-reorder cards. State persists locally.
 
-## 🚀 Quick Start
+| Conflict detection | Degree-aware combo explorer | Plan loaded, no conflicts |
+|---|---|---|
+| ![](docs/img/conflict.png) | ![](docs/img/combos.png) | ![](docs/img/combo_loaded.png) |
 
-### Prerequisites
-- Python 3.x
-- pip3
+## Run it
 
-### Installation
+Open `docs/index.html` in any browser. That's it. The course list and the `USER_COMPLETED` / `PRIOR_SATISFIED` blocks near the top of the script are plain data, so you can edit them to match your own record.
 
-1. **Clone the repository**:
-```bash
-git clone <repository-url>
-cd hackathon
-```
+## Privacy
 
-2. **Install dependencies**:
-```bash
-pip3 install -r requirements.txt
-```
-
-3. **Run the application**:
-```bash
-python3 app.py
-```
-
-4. **Access the application**:
-```
-http://localhost:5001/vanilla
-```
-
-## 📖 Usage Guide
-
-### 1. **Browse Courses**
-- **Search**: Use the search bar to find courses by title, code, or description
-- **Filter**: Use subject and credit filters to narrow down options
-- **View Details**: Each course shows instructors, requirements, and meeting times
-- **Visual Requirements**: See at a glance if courses fulfill Core, Major, or GE requirements
-
-### 2. **Build Your Schedule**
-- **Select Courses**: Click "Add" to select courses for your schedule
-- **Track Selection**: See how many courses you've selected
-- **Generate Schedule**: Click "Generate Schedule" to create your weekly timetable
-
-### 3. **Resolve Conflicts**
-- **View Conflicts**: See any scheduling conflicts highlighted in red
-- **AI Analysis**: Get intelligent analysis of conflicts with smart recommendations
-- **Alternative Courses**: Browse suggested alternatives with different meeting times
-- **One-Click Add**: Add suggested courses directly to your schedule
-
-### 4. **Academic Planning**
-- **Requirement Tags**: 
-  - 🟢 **CORE** - Core curriculum requirements
-  - 🟡 **MAJOR REQ** - Major requirements
-  - 🔵 **MAJOR ELECTIVE** - Major electives
-  - 🟣 **GE** - General education requirements
-- **Credit Tracking**: Monitor total credits for your semester
-- **Schedule Overview**: See your complete weekly schedule organized by day
-
-## 🔧 API Endpoints
-
-### Core Endpoints
-- `GET /` - Main application (React version)
-- `GET /vanilla` - Enhanced vanilla JavaScript version
-- `GET /simple` - Basic test version
-
-### Course Data
-- `GET /api/courses` - Get all courses
-- `GET /api/courses/search?q=query&subject=subject&credits=credits` - Search courses
-- `GET /api/subjects` - Get all available subjects
-
-### Schedule Generation
-- `POST /api/schedule/generate` - Generate schedule with AI analysis
-  ```json
-  {
-    "courses": ["CS-UH 1001", "MATH-UH 1012Q", "ECON-UH 1112"]
-  }
-  ```
-
-## 📊 Course Data Structure
-
-Each course includes:
-```json
-{
-  "course_id": "CS-UH 1001",
-  "title": "Introduction to Computer Science",
-  "subject": "Computer Science",
-  "description": "Course description...",
-  "instructors": ["Instructor Name"],
-  "credits": 4,
-  "requirements": ["CORE"],
-  "tags": ["programming", "algorithms"],
-  "sections": [
-    {
-      "section_id": "001",
-      "location": "Room Location",
-      "capacity": 35,
-      "enrolled": 30,
-      "meetings": [
-        {
-          "day": "Mon",
-          "start": "08:30",
-          "end": "11:10"
-        }
-      ]
-    }
-  ]
-}
-```
-
-## 🎯 AI-Powered Features
-
-### Smart Conflict Analysis
-- **Intelligent Detection**: Identifies all scheduling conflicts
-- **Contextual Analysis**: Understands the nature of conflicts
-- **Smart Suggestions**: Recommends alternative courses in similar subject areas
-- **Time Optimization**: Suggests courses with different meeting times
-
-### Course Recommendations
-- **Subject Matching**: Finds courses in the same academic area
-- **Requirement Alignment**: Suggests courses that fulfill similar requirements
-- **Schedule Compatibility**: Ensures suggested courses don't conflict
-- **Academic Value**: Prioritizes courses that maintain academic progress
-
-## 🎨 User Interface Features
-
-### Visual Design
-- **Color-Coded Requirements**: Instant recognition of course types
-- **Interactive Elements**: Hover effects and smooth transitions
-- **Responsive Layout**: Adapts to different screen sizes
-- **Clear Typography**: Easy-to-read course information
-
-### User Experience
-- **Real-time Search**: Instant filtering as you type
-- **One-Click Actions**: Add/remove courses with single clicks
-- **Visual Feedback**: Clear indicators for selected courses
-- **Smart Defaults**: Intelligent default settings and suggestions
-
-## 🔧 Troubleshooting
-
-### Port Conflicts
-If you encounter "Address already in use" errors:
-```bash
-# Kill processes on port 5001
-lsof -ti:5001 | xargs kill -9
-
-# Or change the port in app.py (line 1106)
-```
-
-### Dependencies
-If you get import errors:
-```bash
-pip3 install Flask==2.3.3 Werkzeug==2.3.7 requests
-```
-
-### Browser Issues
-- Use the `/vanilla` route for the most reliable experience
-- Clear browser cache if you see outdated content
-- Ensure JavaScript is enabled
-
-## 📈 Performance
-
-- **Fast Loading**: Optimized for quick course browsing
-- **Efficient Search**: Real-time filtering with minimal latency
-- **Smart Caching**: Efficient data handling for smooth experience
-- **Responsive**: Works well on all device sizes
-
-## 🎓 Academic Integration
-
-### NYUAD-Specific Features
-- **Real Course Data**: Actual NYUAD Fall 2025 courses
-- **Academic Requirements**: Proper Core, Major, and GE categorization
-- **Credit System**: 4-credit course structure
-- **Meeting Times**: Realistic class schedules and locations
-
-### Student-Friendly Design
-- **Intuitive Interface**: Easy for students to use
-- **Academic Planning**: Helps with degree requirement tracking
-- **Conflict Resolution**: Solves common scheduling problems
-- **Export Ready**: Schedule data ready for calendar integration
-
-## 🚀 Future Enhancements
-
-- **Calendar Export**: Export schedules to .ics files
-- **Degree Planning**: Track progress toward degree requirements
-- **Course Reviews**: Student feedback and ratings
-- **Mobile App**: Native mobile application
-- **Advanced AI**: More sophisticated recommendation algorithms
-
-## 📝 License
-
-This project is developed for educational purposes at NYUAD.
-
-## 🤝 Contributing
-
-This is a hackathon project showcasing modern web development and AI integration for academic planning.
-
----
-
-**Smart Schedule Synth** - Making course scheduling intelligent and effortless for NYUAD students! 🎓✨
-
-
-
-
-# Description
-## How We Got Here
-
-*Early alpha:* We could detect time conflicts but didn’t guide users on how to fix them, and course info was too shallow to make informed choices.
-
-*What we changed:*
-
-•⁠  ⁠*Smart conflict resolution:* Contextual *add/drop suggestions* propose viable swaps and alternative sections the moment a clash appears.
-
-•⁠  ⁠*Drop courses that don’t fit:* A dedicated *one-click drop* keeps your plan tidy.
-
-•⁠  ⁠*Requirement-aware planning:* Choose *graduation requirements* (core, major/minor, electives, etc.) and have schedules generated with those constraints in mind.
-
-•⁠  ⁠*In-depth course descriptions:* Detailed views include *timings, **professors, **course codes, **credits, **sections, and **prerequisites* where available.
-
-•⁠  ⁠*UX pass:* Clearer labels, tighter layout, improved empty states, and streamlined flows put key actions one click closer.
-
-•⁠  ⁠*Search that actually helps:* A top-level *search bar* lets you jump straight to the course/section you need—by name or code—and add it instantly.
-
-
-*Result:* A scheduler that not only flags problems, but also helps you fix them—and ensures the plan you pick actually satisfies your degree requirements.
+The public demo uses a **fictional sample student**. Before publishing I removed my transcript, my enrollment appointment, Albert class numbers, an instructor-permission record, and all peer course reviews (they came from a private student group). Course titles, times, and instructors are from NYUAD's public Fall 2026 listings as of April 2026 and may have changed since.
